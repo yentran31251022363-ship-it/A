@@ -150,7 +150,6 @@ if page == "Trang Chủ (Giới thiệu)":
 # TRANG 2: HỆ THỐNG XỬ LÝ CHÍNH
 # ------------------------------------------
 elif page == "Hệ Thống Nhận Diện":
-    # Sửa CSS: Cô lập phạm vi đổi màu chữ đen rõ ràng, tránh tràn sang trang khác
     app_bg = """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -160,8 +159,7 @@ elif page == "Hệ Thống Nhận Diện":
         background-color: #FDF6E2 !important; 
     }
     
-    /* Ép màu chữ đen rõ ràng riêng cho cấu phần văn bản khu nhận diện */
-    .stApp div, .stApp p, .stApp span, .stApp label, .stApp h2 {
+    .stApp p, .stApp span, .stApp label, .stApp h2 {
         color: #111111 !important;
     }
     
@@ -243,7 +241,6 @@ elif page == "Hệ Thống Nhận Diện":
 
     active_file = camera_file if camera_file is not None else uploaded_file
 
-    # BẢO ĐẢM HIỂN THỊ KHUNG THANH TOÁN KỂ CẢ KHI CHƯA CÓ ẢNH TRUYỀN VÀO (Không bị trống trơn)
     total_bill = 0
     html_items = ""
     ai_console_logs = ["💡 [Hệ thống]: Sẵn sàng. Vui lòng tải hoặc chụp ảnh khay cơm để phân tích."]
@@ -286,7 +283,6 @@ elif page == "Hệ Thống Nhận Diện":
             confidence = 0.0
             price = 0
 
-            # Chạy Mô hình nếu tải thành công
             if model is not None:
                 img_resized = cv2.resize(region_img, (224, 224))
                 img_batch = np.expand_dims(img_resized, axis=0).astype('float32')
@@ -298,7 +294,6 @@ elif page == "Hệ Thống Nhận Diện":
                 food_name = CLASS_NAMES[predicted_class_idx]
                 price = PRICE_MAP[food_name]
             else:
-                # Chế độ chạy thử nghiệm Simulation Mockup nếu file .keras bị thiếu cục bộ
                 if region_name == "Món chính": food_name, price, confidence = "Thịt kho trứng", 30000, 96.0
                 elif region_name == "Món rau xào": food_name, price, confidence = "Rau xào", 10000, 94.0
                 elif region_name == "Canh": food_name, price, confidence = "Canh rau", 7000, 92.0
@@ -336,10 +331,11 @@ elif page == "Hệ Thống Nhận Diện":
             ai_console_logs.append(f"✔ [CNN Core]: Nhận diện '{food_name}' tại khu vực {region_name} ({confidence:.1f}%)")
             item_counter += 1
 
-    # ĐƯA PHẦN TÍNH HÓA ĐƠN THAY THẾ LÊN VỊ TRÍ CỘT PHẢI
     with col_right:
-        invoice_html = f"""
-        <div class='step-banner'>&nbsp;🧾 BƯỚC 3: HÓA ĐƠN ĐIỆN TỬ &amp; THANH TOÁN</div>
+        # SỬA LỖI: Gom toàn bộ HTML cha-con vào 1 khối thống nhất, không dùng f-string nội suy lồng nhau gây lỗi hiển thị mã thô
+        st.markdown("<div class='step-banner'>&nbsp;🧾 BƯỚC 3: HÓA ĐƠN ĐIỆN TỬ &amp; THANH TOÁN</div>", unsafe_allow_html=True)
+        
+        invoice_top_html = f"""
         <div class='canteen-invoice-card'>
             <div class='invoice-header'>
                 <div>
@@ -351,7 +347,9 @@ elif page == "Hệ Thống Nhận Diện":
                     <span class='model-badge'>MODEL: SIMULATION CNN (EFFICIENTNET)</span>
                 </div>
             </div>
-            {html_items}
+        """
+        
+        invoice_bottom_html = f"""
             <div class='total-box'>
                 <span class='total-label'>TỔNG CỘNG:</span>
                 <span class='total-price-value'>{total_bill:,}đ</span>
@@ -364,7 +362,10 @@ elif page == "Hệ Thống Nhận Diện":
             </div>
         </div>
         """
-        st.markdown(invoice_html, unsafe_allow_html=True)
+        
+        # Hợp nhất và biên dịch HTML hoàn chỉnh ra giao diện đồ họa
+        full_invoice_rendered = invoice_top_html + html_items + invoice_bottom_html
+        st.markdown(full_invoice_rendered, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("🛒 XÁC NHẬN & THANH TOÁN NGAY", use_container_width=True, type="primary"):
@@ -376,13 +377,12 @@ elif page == "Hệ Thống Nhận Diện":
         st.markdown(f"<div class='terminal-console'>{console_content}</div>", unsafe_allow_html=True)
 
 # ------------------------------------------
-# TRANG 3: GÓC ẨM THỰC AI (Được phục hồi màu chữ đầy đủ)
+# TRANG 3: GÓC ẨM THỰC AI
 # ------------------------------------------
 elif page == "Góc Ẩm Thực AI":
     glow_css = """
     <style>
     .stApp { background-color: #111111 !important; }
-    /* Trả lại màu chữ sáng chuyên biệt cho trang ẩm thực nền tối */
     .stApp div, .stApp p, .stApp span, .stApp label, .stApp h1, .stApp h3, .stApp button {
         color: #FFFFFF !important;
     }
@@ -405,19 +405,4 @@ elif page == "Góc Ẩm Thực AI":
     suggestions = [
         {"name": "Sườn cốt lết nướng", "desc": "Sườn cốt lết được đập mềm, ướp sả mật ong nướng vàng xém cạnh.", "appeal": "⭐⭐⭐⭐⭐", "image": "https://i.ytimg.com/vi/picf2oCcsb0/maxresdefault.jpg"},
         {"name": "Thịt kho tàu", "desc": "Thịt ba chỉ vuông vức kho rục cùng hột vịt đưa cơm.", "appeal": "⭐⭐⭐⭐⭐", "image": "https://s.yimg.com/fz/api/res/1.2/c5fsSJl9N4niV2tMd7EapQ--~C/YXBwaWQ9c3JjaGRkO2ZpPWZpbGw7aD00MTI7cHhvZmY9NTA7cHlvZmY9MTAwO3E9ODA7c3M9MTt3PTM4OA--/https://i.pinimg.com/736x/7a/52/a2/7a52a2036d5c39dc9f8d9bf642cdd30e.jpg"},
-        {"name": "Cá kho", "desc": "Khúc cá kho ngậy được kho kẹo trong tộ đất với tóp mỡ.", "appeal": "⭐⭐⭐⭐", "image": "https://i.ytimg.com/vi/BfD1KwGwkqA/maxresdefault.jpg"},
-        {"name": "Trứng chiên", "desc": "Trứng vịt chiên dày hành thơm phức, ngoài rìa xém giòn.", "appeal": "⭐⭐⭐", "image": "https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/2023_10_18_638332629116893732_thiet-ke-chua-co-ten-3.jpg"},
-        {"name": "Canh chua", "desc": "Nước canh chua thanh nhẹ từ me chuẩn vị cơm bình dân.", "appeal": "⭐⭐⭐⭐", "image": "https://www.cooking-therapy.com/wp-content/uploads/2020/12/Canh-Chua-13.jpg"}
-    ]
-
-    col1, col2 = st.columns(2)
-    for i, item in enumerate(suggestions):
-        with (col1 if i % 2 == 0 else col2):
-            with st.container(border=True):
-                st.markdown("<div class='food-card-glow'></div>", unsafe_allow_html=True)
-                st.image(item["image"], use_container_width=True)
-                st.subheader(item["name"])
-                st.write(item["desc"])
-                st.caption(f"*Đánh giá từ AI:* {item['appeal']}")
-                if st.button(f"Chọn {item['name']}", key=f"btn_{i}", use_container_width=True):
-                    st.success(f"Đã thêm {item['name']} vào thực đơn!")
+        {"name": "Cá kho", "desc": "Khúc cá kho ngậy được kho kẹo trong tộ đất với tóp mỡ.", "appeal": "⭐⭐⭐⭐", "image": "https://i.ytimg.com/vi/BfD
