@@ -300,7 +300,7 @@ with tabs[1]:
             st.markdown(f"""
             <div style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'>
                 <span style='font-size: 1.1rem; font-weight: bold; color: #000000 !important;'>TỔNG CỘNG:</span>
-                <span style='font-size: 2.3rem; font-weight: 800; color: #435241 !important;'>{total_bill:,}đ</span>
+                <span style='font-size: 2.3rem; font-weight: 800; color: #000000 !important;'>{total_bill:,}đ</span>
             </div>
             """, unsafe_allow_html=True)
 
