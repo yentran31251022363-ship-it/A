@@ -109,8 +109,69 @@ def get_food_badge(food_name):
 # ==========================================
 # GIAO DIỆN CHIA TRANG BẰNG SIDEBAR
 # ==========================================
-st.sidebar.title("🧭 MENU CHÍNH")
-page = st.sidebar.radio("Điều hướng:", ["Trang Chủ (Giới thiệu)", "Hệ Thống Nhận Diện", "Góc Ẩm Thực AI"])
+# ------------------------------------------
+# CẤU HÌNH MENU NGANG PHÍA TRÊN VÀ CSS Ô VUÔNG
+# ------------------------------------------
+custom_style = """
+<style>
+/* Ẩn hoàn toàn thanh bên mặc định của Streamlit nếu còn */
+[data-testid="stSidebar"] {
+    display: none !important;
+}
+
+/* Custom lại giao diện nút chọn hình thức thanh toán dạng Ô VUÔNG KHỐI giống Pic 2 */
+div[data-testid="stRadio"] > div {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 15px !important;
+    padding-top: 10px;
+}
+div[data-testid="stRadio"] label {
+    background-color: #FFFFFF !important;
+    border: 2px solid #EAE0C5 !important;
+    border-radius: 14px !important;
+    padding: 15px 25px !important;
+    width: 100% !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.02) !important;
+}
+/* Hiệu ứng khi rê chuột vào ô vuông */
+div[data-testid="stRadio"] label:hover {
+    border-color: #5D6B54 !important;
+    background-color: #FDFCF7 !important;
+    transform: translateY(-2px);
+}
+/* Style khi ô vuông được chọn */
+div[data-testid="stRadio"] [data-checked="true"] ~ label {
+    border-color: #435241 !important;
+    background-color: #EBF1EB !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(67, 82, 65, 0.15) !important;
+}
+/* Ẩn dấu chấm tròn mặc định của st.radio để thành ô vuông thuần túy */
+div[data-testid="stRadio"] input[type="radio"] {
+    display: none !important;
+}
+div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
+    margin: 0 !important;
+    font-size: 1rem !important;
+}
+</style>
+"""
+st.markdown(custom_style, unsafe_allow_html=True)
+
+# Tạo thanh điều hướng ngang (Top Tabs) giống thiết kế Pic 1
+page = st.tabs(["🏠 Giới Thiệu Dự Án", "📷 Hệ Thống Nhận Diện", "📊 Góc Ẩm Thực AI"])
+
+# Chuyển đổi tab được chọn thành biến page để khớp với logic `if/elif` hiện tại của bạn
+if page[0]:
+    page = "Giới Thiệu Dự Án"
+elif page[1]:
+    page = "Hệ Thống Nhận Diện"
+elif page[2]:
+    page = "Góc Ẩm Thực AI"
 
 # ------------------------------------------
 # TRANG 1: MARKETING & GIỚI THIỆU
