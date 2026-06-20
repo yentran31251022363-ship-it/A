@@ -323,42 +323,19 @@ with tabs[1]:
                 </div>
                 """, unsafe_allow_html=True)
                 idx += 1
-st.markdown(f"<div style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'><span style='font-size: 1.1rem; font-weight: bold; color: #000000 !important;'>TỔNG CỘNG:</span><span style='font-size: 2.3rem; font-weight: 800; color: #000000 !important;'>{total_bill:,}đ</span></div>", unsafe_allow_html=True)
+# 1. Khối tổng cộng viết trên 1 dòng để tránh lệch hàng
+            st.markdown(f"<div style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'><span style='font-size: 1.1rem; font-weight: bold; color: #000000 !important;'>TỔNG CỘNG:</span><span style='font-size: 2.3rem; font-weight: 800; color: #000000 !important;'>{total_bill:,}đ</span></div>", unsafe_allow_html=True)
 
+            # 2. Tiêu đề phương thức thanh toán (Đã sửa thụt lề chuẩn 12 dấu cách)
             st.markdown("<p style='font-weight: 700; margin-bottom: 6px; color:#000000 !important;'>💳 PHƯƠNG THỨC THANH TOÁN</p>", unsafe_allow_html=True)
 
-            if "payment_method" not in st.session_state:
-                st.session_state.payment_method = "💵 Tiền mặt"
-
-            pm_col1, pm_col2 = st.columns(2)
-            with pm_col1:
-                if st.button(
-                    "💵 Tiền mặt",
-                    key="btn_pay_cash",
-                    use_container_width=True,
-                    type="primary" if st.session_state.payment_method == "💵 Tiền mặt" else "secondary"
-                ):
-                    st.session_state.payment_method = "💵 Tiền mặt"
-                    st.rerun()
-            with pm_col2:
-                if st.button(
-                    "🏦 Chuyển khoản",
-                    key="btn_pay_transfer",
-                    use_container_width=True,
-                    type="primary" if st.session_state.payment_method == "🏦 Chuyển khoản" else "secondary"
-                ):
-                    st.session_state.payment_method = "🏦 Chuyển khoản"
-                    st.rerun()
-
-            pay_option = st.session_state.payment_method
-
-            st.write("")
-            if pay_option == "💵 Tiền mặt": st.success("💰 **Hệ thống sẵn sàng:** Vui lòng nhận tiền mặt và xác nhận hoàn tất đơn.")
-            elif pay_option == "🏦 Chuyển khoản": st.info("📲 **Chuyển khoản:** Hệ thống đã đồng bộ cổng QR động thanh toán.")
-
-            st.write("")
-            if st.button("XÁC NHẬN HOÀN TẤT HÓA ĐƠN", key="btn_confirm_invoice"):
-                st.toast(f"🎉 Đã thanh toán {total_bill:,}đ thành công qua hình thức **{pay_option}**!", icon="✅")
+            # 3. Các nút chọn hình vuông nhỏ gọn
+            pay_option = st.radio(
+                "Chọn hình thức thanh toán:",
+                options=["💵 Tiền mặt", "📱 Quét mã QR", "🪪 Thẻ SV RFID"],
+                key="payment_checkout",
+                label_visibility="collapsed"
+            )
 
 
 # ==========================================
