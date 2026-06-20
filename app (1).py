@@ -64,12 +64,14 @@ div[data-testid="stRadio"] label {
     transition: all 0.2s ease-in-out !important;
     box-shadow: 0 4px 10px rgba(0,0,0,0.04) !important;
 }
+
 /* Hiệu ứng khi hover vào ô chọn */
 div[data-testid="stRadio"] label:hover {
     border-color: #C2410C !important; /* Đổi màu viền cam đậm khi di chuột */
     background-color: #FFFDF9 !important;
     transform: translateY(-2px);
 }
+
 /* XÓA BUTTON TRÒN TRƯỚC CÁC CHOICE VÀ PHỐI MÀU LÀM NỔI BẬT KHI ĐƯỢC CHỌN */
 div[data-testid="stRadio"] [data-checked="true"] ~ label {
     border-color: #EA580C !important; /* Viền cam đậm nổi bật */
@@ -80,6 +82,7 @@ div[data-testid="stRadio"] [data-checked="true"] ~ label p {
     font-weight: 700 !important;
     color: #C2410C !important; /* Chữ màu cam đậm khi active */
 }
+
 /* Ẩn hoàn toàn dấu chấm tròn radio mặc định */
 div[data-testid="stRadio"] input[type="radio"] {
     display: none !important;
@@ -93,6 +96,29 @@ div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
 /* ÉP TẤT CẢ CÁC ĐOẠN TEXT CHÍNH TRONG HÓA ĐƠN THÀNH MÀU ĐEN */
 .food-title, .food-price, .invoice-title, .invoice-subtitle {
     color: #000000 !important;
+}
+
+/* CÁC NÚT CHỌN PHƯƠNG THỨC THANH TOÁN (Ở PHẦN HỆ THỐNG NHẬN DIỆN) DẠNG Ô VUÔNG, NHỎ GỌN */
+.st-key-payment_checkout div[data-testid="stRadio"] > div {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    justify-content: flex-start !important;
+}
+.st-key-payment_checkout div[data-testid="stRadio"] label {
+    width: 92px !important;
+    height: 92px !important;
+    min-width: 92px !important;
+    padding: 10px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.st-key-payment_checkout div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
+    font-size: 0.85rem !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
 }
 </style>
 """
@@ -122,6 +148,7 @@ CLASS_NAMES = [
     "Sườn nướng", "Canh rau", "Rau xào"
 ]
 
+
 @st.cache_resource
 def init_model():
     model_path = "canteen_model_STAGE1.keras"
@@ -134,6 +161,7 @@ def init_model():
                 if chunk:
                     f.write(chunk)
     return tf.keras.models.load_model(model_path)
+
 
 def auto_align_tray(img):
     h, w, _ = img.shape
@@ -148,6 +176,7 @@ def auto_align_tray(img):
             img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
         else:
             img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+
     h, w, _ = img.shape
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     gray_resized = cv2.resize(gray, (300, 400))
@@ -157,11 +186,13 @@ def auto_align_tray(img):
         img = cv2.rotate(img, cv2.ROTATE_180)
     return img
 
+
 def get_food_badge(food_name):
     if "Canh" in food_name: return "CANH", "#F5ECE1", "#000000"
     elif "Rau" in food_name or "Xào" in food_name: return "MÓN RAU XÀO", "#E8F5E9", "#000000"
     elif "Khay" in food_name: return "TRỐNG", "#ECEFF1", "#000000"
     else: return "MÓN MẶN", "#FBE9E7", "#000000"
+
 
 # ==========================================
 # TRANG 1: MARKETING & GIỚI THIỆU
@@ -191,6 +222,7 @@ with tabs[0]:
     with col2: st.success("⚡ **Tốc độ chớp nhoáng**\n\nXóa bỏ cảnh xếp hàng dài chờ tính tiền. Mọi thứ hoàn tất trong vài giây.")
     with col3: st.warning("📊 **Quản lý dễ dàng**\n\nHệ thống tự động xuất hóa đơn và thống kê doanh thu minh bạch.")
 
+
 # ==========================================
 # TRANG 2: HỆ THỐNG XỬ LÝ CHÍNH
 # ==========================================
@@ -217,7 +249,7 @@ with tabs[1]:
     </style>
     """
     st.markdown(app_bg, unsafe_allow_html=True)
-    
+
     with st.spinner("⏳ Khởi động động cơ AI..."):
         model = init_model()
 
@@ -230,6 +262,7 @@ with tabs[1]:
         st.markdown("<div class='step-banner'>📸 BƯỚC 1 & 2: THU THẬP & CĂN LỀ KHAY ĂN</div>", unsafe_allow_html=True)
         camera_file = st.camera_input("Chụp ảnh khay ăn trực tiếp")
         uploaded_file = st.file_uploader("Hoặc tải ảnh lên từ thiết bị", type=["jpg", "jpeg", "png"])
+
         st.markdown("<p style='color: #000000; font-weight: 600; margin-bottom: 2px;'>Góc xoay hiệu chỉnh tối ưu từ AI Co-pilot:</p>", unsafe_allow_html=True)
         rotation_mode = st.radio(
             "Góc xoay hiệu chỉnh tối ưu từ AI Co-pilot:",
@@ -264,23 +297,24 @@ with tabs[1]:
 
         with col_right:
             st.markdown("<div class='canteen-invoice-card'>", unsafe_allow_html=True)
-            st.markdown("<div class='invoice-header'><div><h3 class='invoice-title'>🧾 KẾT QUẢ TÍNH TIỀN</h3><div class='invoice-subtitle'>AI kết xuất hóa đơn tự động</div></div><div class='model-badge'>EfficientNet Core V2</div></div>", unsafe_allow_html=True)
+            st.markdown("<div class='invoice-header'><div><h3 class='invoice-title'>🧾 KẾT QUẢ TÍNH TIỀN</h3><div class='invoice-subtitle'>AI kết xuất hóa đơn tự động</div></div></div>", unsafe_allow_html=True)
 
             total_bill = 0
             idx = 1
-
             for region_name, region_img in regions.items():
                 if region_img.shape[0] == 0 or region_img.shape[1] == 0: continue
+
                 img_resized = cv2.resize(region_img, (224, 224))
                 img_batch = np.expand_dims(img_resized, axis=0).astype('float32')
                 img_batch = preprocess_input(img_batch)
-                
+
                 predictions = model.predict(img_batch, verbose=0)
                 predicted_class_idx = np.argmax(predictions[0])
                 confidence = np.max(predictions[0]) * 100
                 food_name = CLASS_NAMES[predicted_class_idx]
-                
+
                 if food_name == "Khay inox (Trống)": continue
+
                 price = PRICE_MAP.get(food_name, 0)
                 total_bill += price
                 badge_text, bg_color, text_color = get_food_badge(food_name)
@@ -331,7 +365,9 @@ with tabs[1]:
             st.write("")
             if st.button("XÁC NHẬN HOÀN TẤT HÓA ĐƠN", key="btn_confirm_invoice"):
                 st.toast(f"🎉 Đã thanh toán {total_bill:,}đ thành công qua hình thức **{pay_option}**!", icon="✅")
+
             st.markdown("</div>", unsafe_allow_html=True)
+
 
 # ==========================================
 # TRANG 3: GÓC ẨM THỰC AI (DASHBOARD)
@@ -368,7 +404,7 @@ with tabs[2]:
         chart_data = {"Ngày": ["03/06", "04/06", "05/06", "06/06", "07/06", "08/06", "09/06"], "Doanh thu ngày (đ)": [50000, 62000, 72000, 48000, 55000, 82000, 35000]}
         st.area_chart(data=chart_data, x="Ngày", y="Doanh thu ngày (đ)", color="#5D6B54")
         st.markdown('</div>', unsafe_allow_html=True)
-        
+
     with col_chart_right:
         st.markdown('<div class="dashboard-card"><div class="card-title">Phương thức thanh toán</div><div style="font-size:0.85rem; color:#555555 !important; margin-bottom:15px;">Tỷ lệ sử dụng dòng tiền</div>', unsafe_allow_html=True)
         pay_methods = [{"name": "🟢 Thẻ Sinh Viên", "val": "179.000đ"}, {"name": "🔴 Ví MoMo", "val": "138.500đ"}, {"name": "🔵 QR Ngân Hàng", "val": "27.000đ"}, {"name": "🟡 Tiền Mặt", "val": "30.000đ"}]
@@ -384,11 +420,10 @@ with tabs[2]:
         for food in top_foods:
             st.markdown(f'<div class="food-rank-row"><div style="display: flex; align-items: center;"><div class="rank-number">{food["rank"]}</div><div><div class="food-info-name" style="color:#000000 !important;">{food["name"]}</div><div class="food-info-revenue" style="color:#333333 !important;">Tích lũy: {food["rev"]}</div></div></div><div class="select-count-tag">{food["count"]}</div></div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
-        
+
     with col_bottom_right:
         st.markdown('<div class="dashboard-card"><div class="card-title">Bán cơm nhanh tại quầy</div><div style="font-size:0.85rem; color:#555555 !important; margin-bottom:15px;">Ghi nhận đơn cơm nhanh không qua Camera</div>', unsafe_allow_html=True)
         st.markdown('<div class="quick-sell-price-box"><div><div style="font-size: 0.8rem; font-weight: 700; color: #555555 !important; text-transform: uppercase;">Giá khay cơm Kiosk hiện tại:</div><div style="font-size: 1.6rem; font-weight: 800; color: #000000 !important;">35.000đ</div></div></div>', unsafe_allow_html=True)
-        
         st.markdown("<p style='font-weight: 600; margin-bottom: 5px; color:#000000 !important;'>Hình thức thanh toán tại quầy:</p>", unsafe_allow_html=True)
         payment_choice = st.radio(
             "Chọn hình thức thanh toán nhanh:",
@@ -396,7 +431,6 @@ with tabs[2]:
             key="quick_payment_choice",
             label_visibility="collapsed"
         )
-        
         st.write("")
         if st.button("XÁC NHẬN BÁN NHANH", key="btn_quick_sell"):
             st.toast(f"🎉 Ghi nhận hóa đơn quầy 35.000đ thành công bằng hình thức **{payment_choice}**!", icon="💰")
