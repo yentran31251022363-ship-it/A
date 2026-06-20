@@ -102,32 +102,7 @@ div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
     color: #000000 !important;
 }
 
-/* CÁC NÚT CHỌN PHƯƠNG THỨC THANH TOÁN (Ở PHẦN HỆ THỐNG NHẬN DIỆN) DẠNG Ô VUÔNG, NHỎ GỌN GIỐNG NÚT XÁC NHẬN HÓA ĐƠN */
-.st-key-payment_checkout div[data-testid="stRadio"] > div {
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    gap: 10px !important;
-    justify-content: flex-start !important;
-    padding-top: 6px !important;
-}
-.st-key-payment_checkout div[data-testid="stRadio"] label {
-    width: auto !important;
-    height: auto !important;
-    min-width: 0 !important;
-    padding: 0.5rem 1.1rem !important;
-    border-radius: 8px !important;
-    border: 1px solid rgba(49, 51, 63, 0.3) !important;
-    background-color: #FFFFFF !important;
-    box-shadow: none !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-.st-key-payment_checkout div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
-    font-size: 0.95rem !important;
-    line-height: 1.2 !important;
-    text-align: center !important;
-}
+/* 2 NÚT CHỌN PHƯƠNG THỨC THANH TOÁN (TIỀN MẶT / CHUYỂN KHOẢN) DÙNG ĐÚNG st.button NÊN HIỆU ỨNG HOVER/CLICK GIỐNG HỆT NÚT XÁC NHẬN HÓA ĐƠN */
 </style>
 """
 st.markdown(custom_ui_style, unsafe_allow_html=True)
@@ -356,18 +331,36 @@ with tabs[1]:
             </div>
             """, unsafe_allow_html=True)
 
-            st.markdown("<p style='font-weight: 700; margin-bottom: 2px; color:#000000 !important;'>💳 PHƯƠNG THỨC THANH TOÁN</p>", unsafe_allow_html=True)
-            pay_option = st.radio(
-                "Chọn hình thức thanh toán:",
-                options=["💵 Tiền mặt", "📱 Quét mã QR", "🪪 Thẻ SV RFID"],
-                key="payment_checkout",
-                label_visibility="collapsed"
-            )
+            st.markdown("<p style='font-weight: 700; margin-bottom: 6px; color:#000000 !important;'>💳 PHƯƠNG THỨC THANH TOÁN</p>", unsafe_allow_html=True)
+
+            if "payment_method" not in st.session_state:
+                st.session_state.payment_method = "💵 Tiền mặt"
+
+            pm_col1, pm_col2 = st.columns(2)
+            with pm_col1:
+                if st.button(
+                    "💵 Tiền mặt",
+                    key="btn_pay_cash",
+                    use_container_width=True,
+                    type="primary" if st.session_state.payment_method == "💵 Tiền mặt" else "secondary"
+                ):
+                    st.session_state.payment_method = "💵 Tiền mặt"
+                    st.rerun()
+            with pm_col2:
+                if st.button(
+                    "🏦 Chuyển khoản",
+                    key="btn_pay_transfer",
+                    use_container_width=True,
+                    type="primary" if st.session_state.payment_method == "🏦 Chuyển khoản" else "secondary"
+                ):
+                    st.session_state.payment_method = "🏦 Chuyển khoản"
+                    st.rerun()
+
+            pay_option = st.session_state.payment_method
 
             st.write("")
             if pay_option == "💵 Tiền mặt": st.success("💰 **Hệ thống sẵn sàng:** Vui lòng nhận tiền mặt và xác nhận hoàn tất đơn.")
-            elif pay_option == "📱 Quét mã QR": st.info("📲 **Quét mã nhanh:** Hệ thống đã đồng bộ cổng QR động thanh toán.")
-            elif pay_option == "🪪 Thẻ SV RFID": st.warning("💳 **Chờ quẹt thẻ:** Vui lòng áp thẻ sinh viên vào đầu đọc RFID.")
+            elif pay_option == "🏦 Chuyển khoản": st.info("📲 **Chuyển khoản:** Hệ thống đã đồng bộ cổng QR động thanh toán.")
 
             st.write("")
             if st.button("XÁC NHẬN HOÀN TẤT HÓA ĐƠN", key="btn_confirm_invoice"):
