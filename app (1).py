@@ -53,14 +53,19 @@ def init_model():
     model_url = "https://github.com/TienManh15072007/AI_FINALPROJECT_FOODTRAYREGCONITION/releases/download/model.py/canteen_model_STAGE2_latest.keras"
     
     if not os.path.exists(model_path):
-        response = requests.get(model_url, stream=True)
-        response.raise_for_status()
-        with open(model_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
+        try:
+            response = requests.get(model_url, stream=True)
+            response.raise_for_status()
+            with open(model_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+        except Exception as e:
+            st.error(f"Không thể tải model tự động từ GitHub: {e}")
                     
-    return tf.keras.models.load_model(model_path)
+    if os.path.exists(model_path):
+        return tf.keras.models.load_model(model_path)
+    return None
 
 # Hàm tự động phân tích và căn lề khay cơm
 def auto_align_tray(img):
@@ -125,7 +130,7 @@ if page == "Trang Chủ (Giới thiệu)":
         background-size: cover; background-position: center; background-attachment: fixed;
     }
     h1, h2, h3, p, span, div { color: white !important; }
-    .main-title { font-size: 3.5rem; font-weight: 800; text-align: center; margin-top: 1vh; color: #F39C12 !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+    .main-title { font-size: 3.5rem; font-weight: 800; text-align: center; margin-top: 15vh; color: #F39C12 !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
     .sub-title { font-size: 1.5rem; text-align: center; margin-bottom: 50px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
     </style>
     """
@@ -145,17 +150,23 @@ if page == "Trang Chủ (Giới thiệu)":
 # TRANG 2: HỆ THỐNG XỬ LÝ CHÍNH
 # ------------------------------------------
 elif page == "Hệ Thống Nhận Diện":
+    # Sửa CSS: Cô lập phạm vi đổi màu chữ đen rõ ràng, tránh tràn sang trang khác
     app_bg = """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    html, body, [class*="css"], .stApp { 
+    
+    .stApp { 
         font-family: 'Inter', sans-serif; 
         background-color: #FDF6E2 !important; 
-        color: #000000 !important;
     }
+    
+    /* Ép màu chữ đen rõ ràng riêng cho cấu phần văn bản khu nhận diện */
+    .stApp div, .stApp p, .stApp span, .stApp label, .stApp h2 {
+        color: #111111 !important;
+    }
+    
     .step-banner { 
-        background: #586F56; 
-        color: white !important; 
+        background: #586F56 !important; 
         padding: 12px 20px; 
         border-radius: 8px; 
         font-weight: 600; 
@@ -163,7 +174,8 @@ elif page == "Hệ Thống Nhận Diện":
         margin-bottom: 15px; 
         margin-top: 25px; 
     }
-    .step-banner * { color: white !important; }
+    .step-banner, .step-banner * { color: white !important; }
+    
     [data-testid="stFileUploadDropzone"] { 
         background-color: #ffffff !important; 
         border: 2px dashed #586F56 !important; 
@@ -171,43 +183,41 @@ elif page == "Hệ Thống Nhận Diện":
     }
     
     .canteen-invoice-card { 
-        background-color: #FFFFFF; 
-        border: 1px solid #E0D4B7; 
+        background-color: #FFFFFF !important; 
+        border: 1px solid #E0D4B7 !important; 
         border-radius: 24px; 
         padding: 30px; 
         box-shadow: 0 10px 25px rgba(0,0,0,0.04); 
     }
-    .invoice-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0C5; padding-bottom: 15px; margin-bottom: 20px; }
-    .invoice-title { font-size: 1.8rem; font-weight: 700; color: #264653 !important; margin: 0; }
-    .invoice-subtitle { font-size: 0.95rem; color: #666666 !important; margin-top: 5px; }
-    .model-badge { background-color: #E2E8F0; color: #4A5568 !important; font-family: monospace; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
-    .receipt-btn { background-color: #586F56; color: white !important; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+    .invoice-header .invoice-title { font-size: 1.8rem; font-weight: 700; color: #264653 !important; margin: 0; }
+    .invoice-header .invoice-subtitle { font-size: 0.95rem; color: #666666 !important; margin-top: 5px; }
+    .model-badge { background-color: #E2E8F0 !important; color: #4A5568 !important; font-family: monospace; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
+    .receipt-btn { background-color: #586F56 !important; color: white !important; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
     
     .food-item-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px dashed #EAE0C5; }
     .food-item-left { display: flex; align-items: center; gap: 15px; }
     .food-item-img-container { position: relative; width: 70px; height: 70px; }
     .food-item-img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
-    .food-number-tag { position: absolute; top: -5px; left: -5px; background: #4A4A4A; color: white !important; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 8px; }
+    .food-number-tag { position: absolute; top: -5px; left: -5px; background: #4A4A4A !important; color: white !important; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 8px; }
     .food-details { display: flex; flex-direction: column; gap: 4px; }
     .food-title { font-size: 1.05rem; font-weight: 600; color: #111111 !important; }
     .badge-container { display: flex; gap: 8px; align-items: center; }
     .category-badge { font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
-    .accuracy-badge { background-color: #EDF2F7; color: #4A5568 !important; font-size: 0.75rem; font-weight: 500; padding: 3px 8px; border-radius: 4px; }
+    .accuracy-badge { background-color: #EDF2F7 !important; color: #4A5568 !important; font-size: 0.75rem; font-weight: 500; padding: 3px 8px; border-radius: 4px; }
     .food-price { font-size: 1.15rem; font-weight: 700; color: #111111 !important; }
     
-    .total-box { background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px; }
+    .total-box { background-color: #FFFDF6 !important; border: 1px solid #EAE0C5 !important; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px; }
     .total-label { font-size: 1.1rem; font-weight: bold; color: #5D5446 !important; letter-spacing: 0.5px; }
     .total-price-value { font-size: 2.3rem; font-weight: 800; color: #435241 !important; }
     
     .payment-title { font-size: 0.85rem; font-weight: 700; color: #7D705C !important; text-align: center; margin-bottom: 15px; letter-spacing: 0.5px; }
     
-    /* Giao diện nút bấm lựa chọn phương thức thanh toán kiểu mới */
     .payment-options-grid { display: flex; gap: 12px; margin-bottom: 20px; }
     .payment-choice-box { flex: 1; text-align: center; padding: 12px 6px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; border: 1px solid #D0C4A7; background-color: #FFFFFF; color: #6E7B8B !important; }
-    .pay-selected { background-color: #E6ECE6; border: 2px solid #586F56; color: #2F3E2E !important; }
+    .pay-selected { background-color: #E6ECE6 !important; border: 2px solid #586F56 !important; color: #2F3E2E !important; }
     
-    .terminal-console { background-color: #222222; border-radius: 12px; padding: 15px; font-family: monospace; color: #AAAAAA !important; font-size: 0.85rem; max-height: 120px; overflow-y: auto; }
-    label, p, span, h1, h2, h3, h4, div { color: #000000 !important; }
+    .terminal-console { background-color: #222222 !important; border-radius: 12px; padding: 15px; font-family: monospace; max-height: 120px; overflow-y: auto; }
+    .terminal-console div { color: #AAAAAA !important; }
     </style>
     """
     st.markdown(app_bg, unsafe_allow_html=True)
@@ -233,6 +243,11 @@ elif page == "Hệ Thống Nhận Diện":
 
     active_file = camera_file if camera_file is not None else uploaded_file
 
+    # BẢO ĐẢM HIỂN THỊ KHUNG THANH TOÁN KỂ CẢ KHI CHƯA CÓ ẢNH TRUYỀN VÀO (Không bị trống trơn)
+    total_bill = 0
+    html_items = ""
+    ai_console_logs = ["💡 [Hệ thống]: Sẵn sàng. Vui lòng tải hoặc chụp ảnh khay cơm để phân tích."]
+    
     if active_file is not None:
         image = Image.open(active_file).convert('RGB')
         img_array = np.array(image)
@@ -260,4 +275,149 @@ elif page == "Hệ Thống Nhận Diện":
             "Nước chấm": img_aligned[int(h*0.34):int(h*0.64), int(w*0.56):int(w*0.98)]
         }
 
-        total_bill = 0
+        html_items = ""
+        item_counter = 1
+
+        for region_name, region_img in regions.items():
+            if region_img.shape[0] == 0 or region_img.shape[1] == 0:
+                continue
+
+            food_name = "Đang quét..."
+            confidence = 0.0
+            price = 0
+
+            # Chạy Mô hình nếu tải thành công
+            if model is not None:
+                img_resized = cv2.resize(region_img, (224, 224))
+                img_batch = np.expand_dims(img_resized, axis=0).astype('float32')
+                img_batch = preprocess_input(img_batch)
+
+                predictions = model.predict(img_batch, verbose=0)
+                predicted_class_idx = np.argmax(predictions[0])
+                confidence = np.max(predictions[0]) * 100
+                food_name = CLASS_NAMES[predicted_class_idx]
+                price = PRICE_MAP[food_name]
+            else:
+                # Chế độ chạy thử nghiệm Simulation Mockup nếu file .keras bị thiếu cục bộ
+                if region_name == "Món chính": food_name, price, confidence = "Thịt kho trứng", 30000, 96.0
+                elif region_name == "Món rau xào": food_name, price, confidence = "Rau xào", 10000, 94.0
+                elif region_name == "Canh": food_name, price, confidence = "Canh rau", 7000, 92.0
+                elif region_name == "Cơm trắng": food_name, price, confidence = "Cơm trắng", 10000, 99.0
+
+            if food_name == "Khay inox (Trống)" or region_name == "Nước chấm" or price == 0:
+                continue
+
+            total_bill += price
+            badge_text, bg_color, text_color = get_food_badge(food_name)
+
+            pil_region = Image.fromarray(region_img)
+            buffered = BytesIO()
+            pil_region.save(buffered, format="JPEG")
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+
+            html_items += f"""
+            <div class='food-item-row'>
+                <div class='food-item-left'>
+                    <div class='food-item-img-container'>
+                        <img src='data:image/jpeg;base64,{img_str}' class='food-item-img' />
+                        <div class='food-number-tag'>#{item_counter}</div>
+                    </div>
+                    <div class='food-details'>
+                        <div class='food-title'>{food_name}</div>
+                        <div class='badge-container'>
+                            <span class='category-badge' style='background-color: {bg_color}; color: {text_color} !important;'>{badge_text}</span>
+                            <span class='accuracy-badge'>Acc: {confidence:.0f}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class='food-price'>{price:,}đ</div>
+            </div>
+            """
+            ai_console_logs.append(f"✔ [CNN Core]: Nhận diện '{food_name}' tại khu vực {region_name} ({confidence:.1f}%)")
+            item_counter += 1
+
+    # ĐƯA PHẦN TÍNH HÓA ĐƠN THAY THẾ LÊN VỊ TRÍ CỘT PHẢI
+    with col_right:
+        invoice_html = f"""
+        <div class='step-banner'>&nbsp;🧾 BƯỚC 3: HÓA ĐƠN ĐIỆN TỬ &amp; THANH TOÁN</div>
+        <div class='canteen-invoice-card'>
+            <div class='invoice-header'>
+                <div>
+                    <h3 class='invoice-title'>Hóa Đơn Tổng Canteen</h3>
+                    <div class='invoice-subtitle'>Vé ăn chiết khấu học đường trường đại học</div>
+                </div>
+                <div style='text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;'>
+                    <span class='receipt-btn'>📄 BIÊN LAI</span>
+                    <span class='model-badge'>MODEL: SIMULATION CNN (EFFICIENTNET)</span>
+                </div>
+            </div>
+            {html_items}
+            <div class='total-box'>
+                <span class='total-label'>TỔNG CỘNG:</span>
+                <span class='total-price-value'>{total_bill:,}đ</span>
+            </div>
+            <div class='payment-title'>HÌNH THỨC CHIẾT KHẤU THẺ / SMART-QR</div>
+            <div class='payment-options-grid'>
+                <div class='payment-choice-box pay-selected'>Thẻ SV RFID</div>
+                <div class='payment-choice-box'>Tiền mặt</div>
+                <div class='payment-choice-box'>Quét mã</div>
+            </div>
+        </div>
+        """
+        st.markdown(invoice_html, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🛒 XÁC NHẬN & THANH TOÁN NGAY", use_container_width=True, type="primary"):
+            st.toast("🎉 Giao dịch thành công!")
+            st.balloons()
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        console_content = "".join([f"<div style='margin-bottom: 4px; color: #8BE9FD;'>{log}</div>" for log in ai_console_logs])
+        st.markdown(f"<div class='terminal-console'>{console_content}</div>", unsafe_allow_html=True)
+
+# ------------------------------------------
+# TRANG 3: GÓC ẨM THỰC AI (Được phục hồi màu chữ đầy đủ)
+# ------------------------------------------
+elif page == "Góc Ẩm Thực AI":
+    glow_css = """
+    <style>
+    .stApp { background-color: #111111 !important; }
+    /* Trả lại màu chữ sáng chuyên biệt cho trang ẩm thực nền tối */
+    .stApp div, .stApp p, .stApp span, .stApp label, .stApp h1, .stApp h3, .stApp button {
+        color: #FFFFFF !important;
+    }
+    [data-testid="stVVerticalBlock"] > div:has(div.stElementContainer) { transition: all 0.3s ease-in-out; }
+    .stElementContainer:has(.food-card-glow) { 
+        border-radius: 12px; 
+        box-shadow: 0 0 15px rgba(255, 126, 95, 0.5); 
+        border: 1px solid rgba(255, 126, 95, 0.4); 
+        padding: 10px; 
+        background: #222222 !important; 
+    }
+    </style>
+    """
+    st.markdown(glow_css, unsafe_allow_html=True)
+
+    st.markdown("<h1>✨ GÓC GỢI Ý MÓN NGON TỪ AI</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center;'>Để AI giúp bạn chọn một bữa ăn đầy đủ dinh dưỡng và đậm đà bản sắc cơm Việt hôm nay!</p>", unsafe_allow_html=True)
+    st.write("---")
+
+    suggestions = [
+        {"name": "Sườn cốt lết nướng", "desc": "Sườn cốt lết được đập mềm, ướp sả mật ong nướng vàng xém cạnh.", "appeal": "⭐⭐⭐⭐⭐", "image": "https://i.ytimg.com/vi/picf2oCcsb0/maxresdefault.jpg"},
+        {"name": "Thịt kho tàu", "desc": "Thịt ba chỉ vuông vức kho rục cùng hột vịt đưa cơm.", "appeal": "⭐⭐⭐⭐⭐", "image": "https://s.yimg.com/fz/api/res/1.2/c5fsSJl9N4niV2tMd7EapQ--~C/YXBwaWQ9c3JjaGRkO2ZpPWZpbGw7aD00MTI7cHhvZmY9NTA7cHlvZmY9MTAwO3E9ODA7c3M9MTt3PTM4OA--/https://i.pinimg.com/736x/7a/52/a2/7a52a2036d5c39dc9f8d9bf642cdd30e.jpg"},
+        {"name": "Cá kho", "desc": "Khúc cá kho ngậy được kho kẹo trong tộ đất với tóp mỡ.", "appeal": "⭐⭐⭐⭐", "image": "https://i.ytimg.com/vi/BfD1KwGwkqA/maxresdefault.jpg"},
+        {"name": "Trứng chiên", "desc": "Trứng vịt chiên dày hành thơm phức, ngoài rìa xém giòn.", "appeal": "⭐⭐⭐", "image": "https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/2023_10_18_638332629116893732_thiet-ke-chua-co-ten-3.jpg"},
+        {"name": "Canh chua", "desc": "Nước canh chua thanh nhẹ từ me chuẩn vị cơm bình dân.", "appeal": "⭐⭐⭐⭐", "image": "https://www.cooking-therapy.com/wp-content/uploads/2020/12/Canh-Chua-13.jpg"}
+    ]
+
+    col1, col2 = st.columns(2)
+    for i, item in enumerate(suggestions):
+        with (col1 if i % 2 == 0 else col2):
+            with st.container(border=True):
+                st.markdown("<div class='food-card-glow'></div>", unsafe_allow_html=True)
+                st.image(item["image"], use_container_width=True)
+                st.subheader(item["name"])
+                st.write(item["desc"])
+                st.caption(f"*Đánh giá từ AI:* {item['appeal']}")
+                if st.button(f"Chọn {item['name']}", key=f"btn_{i}", use_container_width=True):
+                    st.success(f"Đã thêm {item['name']} vào thực đơn!")
