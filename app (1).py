@@ -110,7 +110,7 @@ def get_food_badge(food_name):
 # GIAO DIỆN CHIA TRANG BẰNG SIDEBAR
 # ==========================================
 st.sidebar.title("🧭 MENU CHÍNH")
-page = st.sidebar.radio("Điều hướng:", ["Trang Chủ (Giới thiệu)", "Hệ Thống Nhận Diện", "Góc Ẩm Thực"])
+page = st.sidebar.radio("Điều hướng:", ["Trang Chủ (Giới thiệu)", "Hệ Thống Nhận Diện", "Góc Ẩm Thực AI"])
 
 # ------------------------------------------
 # TRANG 1: MARKETING & GIỚI THIỆU
@@ -125,7 +125,7 @@ if page == "Trang Chủ (Giới thiệu)":
         background-size: cover; background-position: center; background-attachment: fixed;
     }
     h1, h2, h3, p, span, div { color: white !important; }
-    .main-title { font-size: 3.5rem; font-weight: 800; text-align: center; margin-top: 15vh; color: #F39C12 !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+    .main-title { font-size: 3.5rem; font-weight: 800; text-align: center; margin-top: 1vh; color: #F39C12 !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
     .sub-title { font-size: 1.5rem; text-align: center; margin-bottom: 50px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
     </style>
     """
@@ -145,7 +145,6 @@ if page == "Trang Chủ (Giới thiệu)":
 # TRANG 2: HỆ THỐNG XỬ LÝ CHÍNH
 # ------------------------------------------
 elif page == "Hệ Thống Nhận Diện":
-    # CSS: Đổi toàn bộ background sang màu vàng kem dịu mắt (#FDF6E2), toàn bộ chữ mặc định thành đen (#000000)
     app_bg = """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -171,7 +170,6 @@ elif page == "Hệ Thống Nhận Diện":
         border-radius: 12px !important; 
     }
     
-    /* Thiết kế thẻ hóa đơn nền trắng, chữ đen sắc nét */
     .canteen-invoice-card { 
         background-color: #FFFFFF; 
         border: 1px solid #E0D4B7; 
@@ -202,14 +200,13 @@ elif page == "Hệ Thống Nhận Diện":
     .total-price-value { font-size: 2.3rem; font-weight: 800; color: #435241 !important; }
     
     .payment-title { font-size: 0.85rem; font-weight: 700; color: #7D705C !important; text-align: center; margin-bottom: 15px; letter-spacing: 0.5px; }
-    .payment-options { display: flex; gap: 15px; margin-bottom: 25px; }
-    .payment-box { flex: 1; border-radius: 12px; padding: 15px; font-size: 1rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
-    .pay-active { background-color: #E6ECE6; border: 2px solid #586F56; color: #2F3E2E !important; }
-    .pay-inactive { background-color: #FFFFFF; border: 1px solid #D0C4A7; color: #6E7B8B !important; }
+    
+    /* Giao diện nút bấm lựa chọn phương thức thanh toán kiểu mới */
+    .payment-options-grid { display: flex; gap: 12px; margin-bottom: 20px; }
+    .payment-choice-box { flex: 1; text-align: center; padding: 12px 6px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; border: 1px solid #D0C4A7; background-color: #FFFFFF; color: #6E7B8B !important; }
+    .pay-selected { background-color: #E6ECE6; border: 2px solid #586F56; color: #2F3E2E !important; }
     
     .terminal-console { background-color: #222222; border-radius: 12px; padding: 15px; font-family: monospace; color: #AAAAAA !important; font-size: 0.85rem; max-height: 120px; overflow-y: auto; }
-    
-    /* Đảm bảo text trên các widget Streamlit biến thành màu đen */
     label, p, span, h1, h2, h3, h4, div { color: #000000 !important; }
     </style>
     """
@@ -251,6 +248,9 @@ elif page == "Hệ Thống Nhận Diện":
         else:
             img_aligned = img_array
 
+        with col_left:
+            st.image(img_aligned, use_container_width=True, caption="Khay cơm chuẩn hóa đưa vào AI core")
+
         h, w, _ = img_aligned.shape
         regions = {
             "Món chính": img_aligned[int(h*0.66):int(h*0.98), int(w*0.56):int(w*0.98)],
@@ -261,162 +261,3 @@ elif page == "Hệ Thống Nhận Diện":
         }
 
         total_bill = 0
-        html_items = ""
-        ai_console_logs = []
-        item_counter = 1
-
-        for region_name, region_img in regions.items():
-            if region_img.shape[0] == 0 or region_img.shape[1] == 0:
-                continue
-
-            img_resized = cv2.resize(region_img, (224, 224))
-            img_batch = np.expand_dims(img_resized, axis=0).astype('float32')
-            img_batch = preprocess_input(img_batch)
-
-            predictions = model.predict(img_batch, verbose=0)
-            predicted_class_idx = np.argmax(predictions[0])
-            confidence = np.max(predictions[0]) * 100
-
-            food_name = CLASS_NAMES[predicted_class_idx]
-            price = PRICE_MAP[food_name]
-
-            if food_name == "Khay inox (Trống)" or region_name == "Nước chấm":
-                if food_name != "Khay inox (Trống)":
-                    ai_console_logs.append(f"⚡ [Detector]: Bỏ qua khu vực phụ '{region_name}' ({food_name}).")
-                continue
-
-            total_bill += price
-            badge_text, bg_color, text_color = get_food_badge(food_name)
-
-            pil_region = Image.fromarray(region_img)
-            buffered = BytesIO()
-            pil_region.save(buffered, format="JPEG")
-            img_str = base64.b64encode(buffered.getvalue()).decode()
-
-            html_items += f"""
-            <div class='food-item-row'>
-                <div class='food-item-left'>
-                    <div class='food-item-img-container'>
-                        <img src='data:image/jpeg;base64,{img_str}' class='food-item-img' />
-                        <div class='food-number-tag'>#{item_counter}</div>
-                    </div>
-                    <div class='food-details'>
-                        <div class='food-title'>{food_name}</div>
-                        <div class='badge-container'>
-                            <span class='category-badge' style='background-color: {bg_color}; color: {text_color} !important;'>{badge_text}</span>
-                            <span class='accuracy-badge'>Acc: {confidence:.0f}%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class='food-price'>{price:,}đ</div>
-            </div>
-            """
-            ai_console_logs.append(f"✔ [CNN Core]: Nhận diện thành công '{food_name}' tại {region_name} - Acc: {confidence:.2f}%")
-            item_counter += 1
-
-        # ĐƯA PHẦN TÍNH HÓA ĐƠN LÊN CỘT PHẢI THAY THẾ CHO KHUNG CĂN LỀ AI CŨ
-        with col_right:
-            invoice_html = f"""
-            <div class='step-banner'>🧾 BƯỚC 3: HÓA ĐƠN ĐIỆN TỬ & THANH TOÁN</div>
-            <div class='canteen-invoice-card'>
-                <div class='invoice-header'>
-                    <div>
-                        <h3 class='invoice-title'>Hóa Đơn Tổng Canteen</h3>
-                    </div>
-                    <div style='text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;'>
-                        <span class='receipt-btn'>📄 BIÊN LAI</span>
-                    </div>
-                </div>
-                {html_items}
-                <div class='total-box'>
-                    <span class='total-label'>TỔNG CỘNG:</span>
-                    <span class='total-price-value'>{total_bill:,}đ</span>
-                </div>
-                <div class='payment-title'>HÌNH THỨC CHIẾT KHẤU THẺ / SMART-QR</div>
-                <div class='payment-options'>
-                    <div class='payment-box pay-active'>
-                        <span>Thẻ SV RFID</span>
-                        <span>✓</span>
-                    </div>
-                    <div class='payment-box pay-inactive'>
-                        <span>Mã QR MoMo</span>
-                        <span></span>
-                    </div>
-                </div>
-            </div>
-            """
-            st.markdown(invoice_html, unsafe_allow_html=True)
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🛒 XÁC NHẬN & THANH TOÁN NGAY", use_container_width=True, type="primary"):
-                st.toast("🎉 Giao dịch thanh toán qua Thẻ SV RFID thành công!")
-                st.balloons()
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            console_content = "".join([f"<div style='margin-bottom: 4px; color: #8BE9FD;'>{log}</div>" for log in ai_console_logs])
-            st.markdown(f"<div class='terminal-console'>{console_content}</div>", unsafe_allow_html=True)
-
-# ------------------------------------------
-# TRANG 3: GÓC ẨM THỰC AI
-# ------------------------------------------
-elif page == "Góc Ẩm Thực AI":
-    glow_css = """
-    <style>
-    [data-testid="stVVerticalBlock"] > div:has(div.stElementContainer) { transition: all 0.3s ease-in-out; }
-    .stElementContainer:has(.food-card-glow) { border-radius: 12px; box-shadow: 0 0 15px rgba(255, 126, 95, 0.5), inset 0 0 10px rgba(254, 180, 123, 0.2); border: 1px solid rgba(255, 126, 95, 0.4); padding: 10px; background: #ffffff; }
-    label, p, span, h1, h2, h3, div { color: #000000 !important; }
-    </style>
-    """
-    st.markdown(glow_css, unsafe_allow_html=True)
-
-    st.markdown("<h1>✨ GÓC GỢI Ý MÓN NGON TỪ AI</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center;'>Để AI giúp bạn chọn một bữa ăn đầy đủ dinh dưỡng và đậm đà bản sắc cơm Việt hôm nay!</p>", unsafe_allow_html=True)
-    st.write("---")
-
-    suggestions = [
-        {
-            "name": "Sườn cốt lết nướng", 
-            "desc": "Sườn cốt lết được đập mềm, ướp sả mật ong nướng vàng xém cạnh, chuẩn vị cơm tấm văn phòng.", 
-            "appeal": "⭐⭐⭐⭐⭐ (Siêu hấp dẫn)",
-            "image": "https://i.ytimg.com/vi/picf2oCcsb0/maxresdefault.jpg"
-        },
-        {
-            "name": "Thịt kho tàu (Thịt kho trứng)", 
-            "desc": "Thịt ba chỉ vuông vức kho rục cùng hột vịt, nước kho dừa màu cánh gián đậm đà đưa cơm.", 
-            "appeal": "⭐⭐⭐⭐⭐ (Khó cưỡng)",
-            "image": "https://s.yimg.com/fz/api/res/1.2/c5fsSJl9N4niV2tMd7EapQ--~C/YXBwaWQ9c3JjaGRkO2ZpPWZpbGw7aD00MTI7cHhvZmY9NTA7cHlvZmY9MTAwO3E9ODA7c3M9MTt3PTM4OA--/https://i.pinimg.com/736x/7a/52/a2/7a52a2036d5c39dc9f8d9bf642cdd30e.jpg"
-        },
-        {
-            "name": "Cá kho", 
-            "desc": "Khúc cá kho ngậy được kho kẹo trong tộ đất với tóp mỡ, hành lá và tiêu sọ cay nồng.", 
-            "appeal": "⭐⭐⭐⭐ (Đậm đà dân dã)",
-            "image": "https://i.ytimg.com/vi/BfD1KwGwkqA/maxresdefault.jpg"
-        },
-        {
-            "name": "Trứng chiên", 
-            "desc": "Trứng vịt đánh bông chiên dày hành thơm phức, ngoài rìa xém giòn, bên trong mềm xốp.", 
-            "appeal": "⭐⭐⭐ (Nhanh gọn, bắt miệng)",
-            "image": "https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/2023_10_18_638332629116893732_thiet-ke-chua-co-ten-3.jpg"
-        },
-        {
-            "name": "Canh chua", 
-            "desc": "Nước canh chua thanh nhẹ từ me, nấu kèm đậu bắp, cà chua và giá đỗ chuẩn vị cơm bình dân.", 
-            "appeal": "⭐⭐⭐⭐ (Giải nhiệt sảng khoái)",
-            "image": "https://www.cooking-therapy.com/wp-content/uploads/2020/12/Canh-Chua-13.jpg"
-        }
-    ]
-
-    col1, col2 = st.columns(2)
-    for i, item in enumerate(suggestions):
-        with (col1 if i % 2 == 0 else col2):
-            with st.container(border=True):
-                st.markdown("<div class='food-card-glow'></div>", unsafe_allow_html=True)
-                st.image(item["image"], use_container_width=True, caption=f"Món ăn thực tế: {item['name']}")
-                st.subheader(item["name"])
-                st.write(item["desc"])
-                st.caption(f"*Đánh giá từ AI:* {item['appeal']}")
-                if st.button(f"Chọn {item['name']}", key=f"btn_{i}", use_container_width=True):
-                    st.success(f"Đã ghi chú! AI hệ thống đã thêm {item['name']} vào thực đơn lý tương của bạn.")
-
-    st.write("---")
-    st.info("💡 *Mẹo nhỏ từ AI:* Bộ đôi Combo bất bại của dân văn phòng: **Sườn cốt lết nướng** kết hợp cùng **Canh chua dọc mùng** sẽ mang lại nguồn năng lượng tối đa!")
