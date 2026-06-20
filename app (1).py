@@ -45,6 +45,10 @@ div[data-testid="stTabs"] button {
     font-weight: 600 !important;
     padding: 12px 24px !important;
 }
+/* CHỮ TRÊN CÁC TAB (GIỚI THIỆU / NHẬN DIỆN / GÓC ẨM THỰC) MÀU ĐEN */
+div[data-testid="stTabs"] button p {
+    color: #000000 !important;
+}
 
 /* CẤU HÌNH CÁC Ô LỰA CHỌN THANH TOÁN (BIẾN ST.RADIO THÀNH Ô VUÔNG NỔI BẬT) */
 div[data-testid="stRadio"] > div {
@@ -98,25 +102,29 @@ div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
     color: #000000 !important;
 }
 
-/* CÁC NÚT CHỌN PHƯƠNG THỨC THANH TOÁN (Ở PHẦN HỆ THỐNG NHẬN DIỆN) DẠNG Ô VUÔNG, NHỎ GỌN */
+/* CÁC NÚT CHỌN PHƯƠNG THỨC THANH TOÁN (Ở PHẦN HỆ THỐNG NHẬN DIỆN) DẠNG Ô VUÔNG, NHỎ GỌN GIỐNG NÚT XÁC NHẬN HÓA ĐƠN */
 .st-key-payment_checkout div[data-testid="stRadio"] > div {
+    flex-direction: row !important;
     flex-wrap: wrap !important;
     gap: 10px !important;
     justify-content: flex-start !important;
+    padding-top: 6px !important;
 }
 .st-key-payment_checkout div[data-testid="stRadio"] label {
-    width: 92px !important;
-    height: 92px !important;
-    min-width: 92px !important;
-    padding: 10px !important;
-    border-radius: 12px !important;
-    display: flex !important;
-    flex-direction: column !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    padding: 0.5rem 1.1rem !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(49, 51, 63, 0.3) !important;
+    background-color: #FFFFFF !important;
+    box-shadow: none !important;
+    display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
 .st-key-payment_checkout div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
-    font-size: 0.85rem !important;
+    font-size: 0.95rem !important;
     line-height: 1.2 !important;
     text-align: center !important;
 }
@@ -231,7 +239,7 @@ with tabs[1]:
     <style>
     .main-body-style { font-family: 'Inter', sans-serif; }
     .step-banner { background: #586F56; color: white !important; padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 1.1rem; margin-bottom: 15px; margin-top: 10px; }
-    .canteen-invoice-card { background-color: #FFFFFF; border: 1px solid #E0D4B7; border-radius: 24px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.04); }
+    .canteen-invoice-card, .st-key-invoice_card { background-color: #FFFFFF; border: 1px solid #E0D4B7; border-radius: 24px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.04); }
     .invoice-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0C5; padding-bottom: 15px; margin-bottom: 20px; }
     .invoice-title { font-size: 1.6rem; font-weight: 700; color: #000000 !important; margin: 0; }
     .invoice-subtitle { font-size: 0.95rem; color: #333333 !important; }
@@ -295,8 +303,7 @@ with tabs[1]:
             "Nước chấm": img_aligned[int(h*0.34):int(h*0.64), int(w*0.56):int(w*0.98)]
         }
 
-        with col_right:
-            st.markdown("<div class='canteen-invoice-card'>", unsafe_allow_html=True)
+        with col_right, st.container(key="invoice_card"):
             st.markdown("<div class='invoice-header'><div><h3 class='invoice-title'>🧾 KẾT QUẢ TÍNH TIỀN</h3><div class='invoice-subtitle'>AI kết xuất hóa đơn tự động</div></div></div>", unsafe_allow_html=True)
 
             total_bill = 0
@@ -365,8 +372,6 @@ with tabs[1]:
             st.write("")
             if st.button("XÁC NHẬN HOÀN TẤT HÓA ĐƠN", key="btn_confirm_invoice"):
                 st.toast(f"🎉 Đã thanh toán {total_bill:,}đ thành công qua hình thức **{pay_option}**!", icon="✅")
-
-            st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ==========================================
