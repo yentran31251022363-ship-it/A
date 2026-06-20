@@ -323,13 +323,22 @@ with tabs[1]:
                 </div>
                 """, unsafe_allow_html=True)
                 idx += 1
-# 1. Khối tổng cộng viết trên 1 dòng để tránh lệch hàng
-            st.markdown(f"<div style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'><span style='font-size: 1.1rem; font-weight: bold; color: #000000 !important;'>TỔNG CỘNG:</span><span style='font-size: 2.3rem; font-weight: 800; color: #000000 !important;'>{total_bill:,}đ</span></div>", unsafe_allow_html=True)
+# =================================================================
+            # KHỐI TỔNG CỘNG (Đổi toàn bộ chữ và số tiền thành màu đen tuyệt đối)
+            # =================================================================
+            st.markdown(
+                f"<div style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'>"
+                f"<span style='font-size: 1.2rem; font-weight: 800; color: #000000 !important; font-family: sans-serif;'>TỔNG CỘNG:</span>"
+                f"<span style='font-size: 2.3rem; font-weight: 900; color: #000000 !important; font-family: sans-serif;'>{total_bill:,}đ</span>"
+                f"</div>", 
+                unsafe_allow_html=True
+            )
 
-            # 2. Tiêu đề phương thức thanh toán (Đã sửa thụt lề chuẩn 12 dấu cách)
-            st.markdown("<p style='font-weight: 700; margin-bottom: 6px; color:#000000 !important;'>💳 PHƯƠNG THỨC THANH TOÁN</p>", unsafe_allow_html=True)
-
-            # 3. Các nút chọn hình vuông nhỏ gọn
+            # =================================================================
+            # PHƯƠNG THỨC THANH TOÁN (Ép chữ đen cho cả tiêu đề)
+            # =================================================================
+            st.markdown("<p style='font-weight: 700; font-size: 1.05rem; margin-bottom: 6px; color: #000000 !important; font-family: sans-serif;'>💳 PHƯƠNG THỨC THANH TOÁN</p>", unsafe_allow_html=True)
+            
             pay_option = st.radio(
                 "Chọn hình thức thanh toán:",
                 options=["💵 Tiền mặt", "📱 Quét mã QR", "🪪 Thẻ SV RFID"],
@@ -337,6 +346,10 @@ with tabs[1]:
                 label_visibility="collapsed"
             )
 
+            st.write("")
+            if st.button("XÁC NHẬN HOÀN TẤT HÓA ĐƠN", key="btn_confirm_invoice"):
+                st.toast(f"🎉 Đã thanh toán {total_bill:,}đ qua hình thức **{pay_option}**!", icon="✅")
+            st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
 # TRANG 3: GÓC ẨM THỰC AI (DASHBOARD)
