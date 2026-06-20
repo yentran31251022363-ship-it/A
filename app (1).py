@@ -226,6 +226,84 @@ elif page == "Hệ Thống Nhận Diện":
             horizontal=True
         )
 
+# ------------------------------------------
+# TRANG 2: HỆ THỐNG XỬ LÝ CHÍNH
+# ------------------------------------------
+elif page == "Hệ Thống Nhận Diện":
+    app_bg = """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    html, body, [class*="css"], .stApp { 
+        font-family: 'Inter', sans-serif; 
+        background-color: #FDF6E2 !important; 
+        color: #000000 !important;
+    }
+    .step-banner { 
+        background: #586F56; 
+        color: white !important; 
+        padding: 12px 20px; 
+        border-radius: 8px; 
+        font-weight: 600; 
+        font-size: 1.1rem; 
+        margin-bottom: 15px; 
+        margin-top: 25px; 
+    }
+    .step-banner * { color: white !important; }
+    [data-testid="stFileUploadDropzone"] { 
+        background-color: #ffffff !important; 
+        border: 2px dashed #586F56 !important; 
+        border-radius: 12px !important; 
+    }
+    
+    .canteen-invoice-card { 
+        background-color: #FFFFFF; 
+        border: 1px solid #E0D4B7; 
+        border-radius: 24px; 
+        padding: 30px; 
+        box-shadow: 0 10px 25px rgba(0,0,0,0.04); 
+    }
+    .invoice-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0C5; padding-bottom: 15px; margin-bottom: 20px; }
+    .invoice-title { font-size: 1.8rem; font-weight: 700; color: #264653 !important; margin: 0; }
+    .invoice-subtitle { font-size: 0.95rem; color: #666666 !important; margin-top: 5px; }
+    .model-badge { background-color: #E2E8F0; color: #4A5568 !important; font-family: monospace; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
+    
+    .food-item-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px dashed #EAE0C5; }
+    .food-item-left { display: flex; align-items: center; gap: 15px; }
+    .food-item-img-container { position: relative; width: 70px; height: 70px; }
+    .food-item-img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
+    .food-number-tag { position: absolute; top: -5px; left: -5px; background: #4A4A4A; color: white !important; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 8px; }
+    .food-details { display: flex; flex-direction: column; gap: 4px; }
+    .food-title { font-size: 1.05rem; font-weight: 600; color: #111111 !important; }
+    .badge-container { display: flex; gap: 8px; align-items: center; }
+    .category-badge { font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
+    .accuracy-badge { background-color: #EDF2F7; color: #4A5568 !important; font-size: 0.75rem; font-weight: 500; padding: 3px 8px; border-radius: 4px; }
+    .food-price { font-size: 1.15rem; font-weight: 700; color: #111111 !important; }
+    
+    label, p, span, h1, h2, h3, h4, div { color: #000000 !important; }
+    </style>
+    """
+    st.markdown(app_bg, unsafe_allow_html=True)
+
+    with st.spinner("⏳ Khởi động động cơ AI, vui lòng đợi trong giây lát..."):
+        model = init_model()
+
+    st.markdown("<h2 style='text-align: center; color: #264653 !important;'>HỆ THỐNG KIỂM TRA & THANH TOÁN KHAY CƠM TỰ ĐỘNG</h2>", unsafe_allow_html=True)
+    st.write("---")
+
+    col_left, col_right = st.columns([1.1, 1.3], gap="large")
+
+    with col_left:
+        st.markdown("<div class='step-banner'>📸 BƯỚC 1 & 2: THU THẬP & CĂN LỀ KHAY ĂN</div>", unsafe_allow_html=True)
+        camera_file = st.camera_input("Chụp ảnh khay ăn trực tiếp")
+        uploaded_file = st.file_uploader("Hoặc tải ảnh lên từ thiết bị", type=["jpg", "jpeg", "png"])
+        
+        rotation_mode = st.radio(
+            "Góc xoay hiệu chỉnh tối ưu từ AI Co-pilot:",
+            ("Tự động chỉnh hướng", "Giữ nguyên (0°)", "Xoay 90° CW", "Xoay 90° CCW", "Xoay 180°"),
+            horizontal=True
+        )
+
+    # --- ĐÂY LÀ VỊ TRÍ BẮT ĐẦU THAY THẾ (TỪ ACTIVE_FILE) ---
     active_file = camera_file if camera_file is not None else uploaded_file
 
     if active_file is not None:
@@ -246,9 +324,7 @@ elif page == "Hệ Thống Nhận Diện":
         with col_left:
             st.image(img_aligned, use_container_width=True, caption="Khay cơm chuẩn hóa đưa vào AI core")
 
-        # ------------------------------------------
-        # XỬ LÝ NHẬN DIỆN & TÍNH TOÁN HÓA ĐƠN THỰC TẾ
-        # ------------------------------------------
+        # Phân chia vùng cắt của khay ăn
         h, w, _ = img_aligned.shape
         regions = {
             "Cơm trắng": img_aligned[int(h*0.02):int(h*0.44), int(w*0.02):int(w*0.54)],
@@ -273,12 +349,10 @@ elif page == "Hệ Thống Nhận Diện":
             total_bill = 0
             idx = 1
 
-            # Vòng lặp quét qua các vùng ảnh để nhận diện món và tính tiền
             for region_name, region_img in regions.items():
                 if region_img.shape[0] == 0 or region_img.shape[1] == 0:
                     continue
                 
-                # Chuyển đổi định dạng đưa vào Model dự đoán
                 img_resized = cv2.resize(region_img, (224, 224))
                 img_batch = np.expand_dims(img_resized, axis=0).astype('float32')
                 img_batch = preprocess_input(img_batch)
@@ -290,14 +364,12 @@ elif page == "Hệ Thống Nhận Diện":
                 food_name = CLASS_NAMES[predicted_class_idx]
                 price = PRICE_MAP.get(food_name, 0)
                 
-                # Bỏ qua khay trống không tính tiền
                 if food_name == "Khay inox (Trống)":
                     continue
                     
                 total_bill += price
                 badge_text, bg_color, text_color = get_food_badge(food_name)
 
-                # Convert ảnh vùng cắt sang base64 để hiển thị lên dòng hóa đơn
                 _, buffer = cv2.imencode('.jpg', cv2.cvtColor(region_img, cv2.COLOR_RGB2BGR))
                 img_base64 = base64.b64encode(buffer).decode()
 
@@ -321,9 +393,7 @@ elif page == "Hệ Thống Nhận Diện":
                 """, unsafe_allow_html=True)
                 idx += 1
 
-            # ------------------------------------------
-            # PHẦN TÍNH TỔNG BILL (ĐÃ THAY THẾ Ô ĐEN)
-            # ------------------------------------------
+            # 1. PHẦN TÍNH TỔNG BILL TỰ ĐỘNG (Đã xóa ô đen code thừa)
             st.markdown(f"""
             <div class='total-box' style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'>
                 <span class='total-label' style='font-size: 1.1rem; font-weight: bold; color: #5D5446 !important;'>TỔNG CỘNG:</span>
@@ -331,13 +401,10 @@ elif page == "Hệ Thống Nhận Diện":
             </div>
             """, unsafe_allow_html=True)
 
-            # ------------------------------------------
-            # KHU VỰC PHƯƠNG THỨC THANH TOÁN (Ô VUÔNG XINH ĐẸP)
-            # ------------------------------------------
+            # 2. KHU VỰC LỰA CHỌN PHƯƠNG THỨC THANH TOÁN (Ô vuông xinh đẹp nằm ngang)
             st.markdown("### 💳 PHƯƠNG THỨC THANH TOÁN")
             st.write("Chọn hình thức thanh toán phù hợp:")
 
-            # Sử dụng st.radio tùy biến giao diện dạng hộp lựa chọn
             pay_option = st.radio(
                 "Chọn hình thức thanh toán phù hợp:",
                 options=["💵 Tiền mặt", "📱 Chuyển khoản (Quét mã QR)", "🪪 Thẻ SV RFID"],
@@ -347,7 +414,7 @@ elif page == "Hệ Thống Nhận Diện":
 
             st.write("")
 
-            # Khối chỉ dẫn tương ứng với ô được chọn giúp nhân viên dễ thao tác
+            # Banner chỉ dẫn tương ứng với ô được chọn
             if pay_option == "💵 Tiền mặt":
                 st.success("💰 **Hệ thống sẵn sàng:** Vui lòng nhận tiền mặt từ khách hàng và ấn xác nhận kết toán.")
             elif pay_option == "📱 Chuyển khoản (Quét mã QR)":
@@ -360,38 +427,7 @@ elif page == "Hệ Thống Nhận Diện":
                 st.toast(f"🎉 Thanh toán thành công {total_bill:,}đ qua phương thức **{pay_option}**!", icon="✅")
                 
             st.markdown("</div>", unsafe_allow_html=True)
-            # Gắn mã QR động bằng API VietQR nếu chọn Chuyển khoản
-            if payment_method == "Chuyển khoản (Quét mã QR)":
-                if total_bill > 0:
-                    st.info("💡 Hệ thống đã tự động tạo mã QR chính xác với tổng số tiền hóa đơn.")
-                    # Sử dụng API VietQR miễn phí (Thay đổi tham số ngân hàng & số tài khoản theo ý muốn của bạn)
-                    # Định dạng: https://img.vietqr.io/image/<BANK_ID>-<ACCOUNT_NO>-qr_only.jpg?amount=<AMOUNT>&addInfo=<MEMO>
-                    bank_id = "MB"          # Tên viết tắt ngân hàng (ví dụ: MB, Vietcombank, Techcombank...)
-                    account_no = "123456789" # Số tài khoản của bạn hoặc của căn tin
-                    memo = f"Thanh toan khay com {total_bill}d"
-                    
-                    qr_url = f"https://img.vietqr.io/image/{bank_id}-{account_no}-qr_only.jpg?amount={total_bill}&addInfo={memo}"
-                    
-                    # Hiển thị mã QR căn giữa
-                    col_qr_l, col_qr_c, col_qr_r = st.columns([1, 2, 1])
-                    with col_qr_c:
-                        st.image(qr_url, caption=f"Vui lòng quét mã QR để chuyển khoản {total_bill:,}đ", use_container_width=True)
-                else:
-                    st.warning("Khay cơm trống hoặc chưa nhận diện được món ăn để tạo mã QR.")
-            
-            elif payment_method == "Tiền mặt":
-                st.success("💰 Vui lòng thanh toán trực tiếp tại quầy thu ngân.")
-                
-            elif payment_method == "Thẻ SV RFID":
-                st.info("🎴 Vui lòng áp thẻ sinh viên vào thiết bị đọc thẻ RFID để thanh toán.")
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🛒 XÁC NHẬN & HOÀN TẤT GIAO DỊCH", use_container_width=True, type="primary"):
-                st.toast("🎉 Giao dịch đã được ghi nhận thành công!")
-                st.balloons()
-            
-            # --- ĐÃ XÓA PHẦN Ô ĐEN (TERMINAL LOGS KHÔNG CẦN THIẾT) ---
-
+    # --- ĐÂY LÀ VỊ TRÍ KẾT THÚC CỦA TRANG 2 ---
 # ------------------------------------------
 # TRANG 3: GÓC ẨM THỰC AI
 # ------------------------------------------
