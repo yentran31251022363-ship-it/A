@@ -110,7 +110,7 @@ def get_food_badge(food_name):
 # GIAO DIỆN CHIA TRANG BẰNG SIDEBAR
 # ==========================================
 st.sidebar.title("🧭 MENU CHÍNH")
-page = st.sidebar.radio("Điều hướng:", ["Trang Chủ (Giới thiệu)", "Hệ Thống Nhận Diện", "Góc Ẩm Thực AI"])
+page = st.sidebar.radio("Điều hướng:", ["Trang Chủ (Giới thiệu)", "Hệ Thống Nhận Diện", "Góc Ẩm Thực"])
 
 # ------------------------------------------
 # TRANG 1: MARKETING & GIỚI THIỆU
@@ -322,11 +322,9 @@ elif page == "Hệ Thống Nhận Diện":
                 <div class='invoice-header'>
                     <div>
                         <h3 class='invoice-title'>Hóa Đơn Tổng Canteen</h3>
-                        <div class='invoice-subtitle'>Vé ăn chiết khấu học đường trường đại học</div>
                     </div>
                     <div style='text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;'>
                         <span class='receipt-btn'>📄 BIÊN LAI</span>
-                        <span class='model-badge'>MODEL: SIMULATION CNN (EFFICIENTNET)</span>
                     </div>
                 </div>
                 {html_items}
