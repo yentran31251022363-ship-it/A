@@ -93,6 +93,17 @@ def auto_align_tray(img):
 
     return img
 
+# Phân loại Badge món ăn dựa trên tên
+def get_food_badge(food_name):
+    if "Canh" in food_name:
+        return "CANH", "#F5ECE1", "#9C6644"
+    elif "Rau" in food_name or "Xào" in food_name:
+        return "MÓN RAU XÀO", "#E8F5E9", "#2E7D32"
+    elif "Khay" in food_name:
+        return "TRỐNG", "#ECEFF1", "#455A64"
+    else:
+        return "MÓN MẶN", "#FBE9E7", "#D84315"
+
 # ==========================================
 # GIAO DIỆN CHIA TRANG BẰNG SIDEBAR
 # ==========================================
@@ -135,7 +146,6 @@ if page == "Trang Chủ (Giới thiệu)":
     </style>
     """
     st.markdown(marketing_bg, unsafe_allow_html=True)
-    
     st.markdown("<h1 class='main-title'>CANTEEN AI SYSTEM</h1>", unsafe_allow_html=True)
     st.markdown("<p class='sub-title'>Giải pháp nhận diện khay cơm và thanh toán tự động bằng công nghệ Computer Vision</p>", unsafe_allow_html=True)
     
@@ -153,130 +163,182 @@ if page == "Trang Chủ (Giới thiệu)":
 elif page == "Hệ Thống Nhận Diện":
     app_bg = """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] {
-        font-family: 'Montserrat', sans-serif;
+        font-family: 'Inter', sans-serif;
     }
     .stApp {
-        background-color: #FFFDF9;
-    }
-    .st-emotion-cache-1jicfl2 {
-        padding: 2rem 3rem;
+        background-color: #F9F9F9;
     }
     .step-banner {
-        background: linear-gradient(135deg, #FF7E5F 0%, #FEB47B 100%);
+        background: #586F56;
         color: white;
         padding: 12px 20px;
         border-radius: 8px;
-        font-weight: 700;
-        font-size: 1.2rem;
+        font-weight: 600;
+        font-size: 1.1rem;
         margin-bottom: 15px;
         margin-top: 25px;
-        box-shadow: 0 4px 6px rgba(255, 126, 95, 0.2);
-        display: flex;
-        align-items: center;
-        gap: 10px;
     }
     [data-testid="stFileUploadDropzone"] {
         background-color: #ffffff !important;
-        border: 2px dashed #FF7E5F !important;
+        border: 2px dashed #586F56 !important;
         border-radius: 12px !important;
     }
-    [data-testid="stFileUploadDropzone"] div {
-        color: #2C3E50 !important;
-    }
-    .stRadio label, .stRadio p {
-        font-weight: 600 !important;
-        color: #2C3E50 !important;
-    }
     
-    /* Giao diện Console nền đen chữ sáng giống trong ảnh */
-    .receipt-container {
-        background-color: #151515 !important;
-        border: 1px solid #333333 !important;
-        border-radius: 8px !important;
-        padding: 18px !important;
-        font-family: 'Courier New', Courier, monospace !important;
-        box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.3);
-        min-height: 180px;
-        max-height: 250px;
-        overflow-y: auto;
+    /* TOÀN BỘ KHU VỰC HÓA ĐƠN THEO THIẾT KẾ MỚI */
+    .canteen-invoice-card {
+        background-color: #FFFFFF;
+        border: 1px solid #EAEAEA;
+        border-radius: 24px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.02);
     }
-    .receipt-container p {
-        margin: 6px 0 !important;
-        font-weight: 500 !important;
-        line-height: 1.4 !important;
+    .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #EEEEEE;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
     }
-    
-    h1 {
-        color: #D35400 !important;
-        text-align: center;
-        font-weight: 800 !important;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    .subtitle-text {
-        text-align: center;
-        font-size: 1.1rem;
-        color: #7F8C8D;
-        margin-bottom: 30px;
-    }
-    .food-label {
-        text-align: center;
+    .invoice-title {
+        font-size: 1.8rem;
         font-weight: 700;
-        color: #2C3E50;
-        margin-top: 10px;
-        margin-bottom: 5px;
-        font-size: 1.1rem;
+        color: #264653;
+        margin: 0;
     }
-    </style>
-    """
-    st.markdown(app_bg, unsafe_allow_html=True)
-
-    with st.spinner("⏳ Khởi động động cơ AI, vui lòng đợi trong giây lát..."):
-        model = init_model()
-
-    st.markdown("<h1>Khu Vực Thanh Toán Thu Ngân</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='subtitle-text'>Xác nhận khay ăn tự động • Nhanh chóng • Chính xác</p>", unsafe_allow_html=True)
+    .invoice-subtitle {
+        font-size: 0.95rem;
+        color: #9A9A9A;
+        margin-top: 5px;
+    }
+    .model-badge {
+        background-color: #E2E8F0;
+        color: #4A5568;
+        font-family: monospace;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+    .receipt-btn {
+        background-color: #586F56;
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
     
-    st.write("---")
-
-    col_input, col_preview = st.columns([1.2, 1], gap="large")
-
-    with col_input:
-        st.markdown("<div class='step-banner'>📸 BƯỚC 1: TẢI HOẶC CHỤP ẢNH KHAY CƠM</div>", unsafe_allow_html=True)
-        camera_file = st.camera_input("Chụp ảnh trực tiếp từ Camera")
-        uploaded_file = st.file_uploader("Hoặc kéo thả ảnh/chọn từ thiết bị (Hỗ trợ: jpg, png)", type=["jpg", "jpeg", "png"])
-        
-        st.markdown("<div class='step-banner'>🔄 BƯỚC 2: TÙY CHỈNH GÓC NHÌN</div>", unsafe_allow_html=True)
-        rotation_mode = st.radio(
-            "Cài đặt căn lề tự động của AI (Chỉ can thiệp khi cần thiết):",
-            ("Tự động chỉnh hướng", "Giữ nguyên (0°)", "Xoay 90° theo chiều KĐH (CW)", "Xoay 90° ngược chiều KĐH (CCW)", "Xoay 180°"),
-            horizontal=True
-        )
-
-    active_file = camera_file if camera_file is not None else uploaded_file
-
-    if active_file is not None:
-        image = Image.open(active_file).convert('RGB')
-        img_array = np.array(image)
-
-        with col_preview:
-            st.markdown("<div class='step-banner'>🎯 KẾT QUẢ CĂN LỀ AI</div>", unsafe_allow_html=True)
-            with st.spinner("⏳ Trí tuệ nhân tạo đang xoay lật và tối ưu hóa ảnh..."):
-                if rotation_mode == "Tự động chỉnh hướng":
-                    img_aligned = auto_align_tray(img_array)
-                elif rotation_mode == "Xoay 90° theo chiều KĐH (CW)":
-                    img_aligned = cv2.rotate(img_array, cv2.ROTATE_90_CLOCKWISE)
-                elif rotation_mode == "Xoay 90° ngược chiều KĐH (CCW)":
-                    img_aligned = cv2.rotate(img_array, cv2.ROTATE_90_COUNTERCLOCKWISE)
-                elif rotation_mode == "Xoay 180°":
-                    img_aligned = cv2.rotate(img_array, cv2.ROTATE_180)
-                else:
-                    img_aligned = img_array
-                
-                st.image(img_aligned, use_container_width=True)
-
-        st.write("---")
-        
-        st.markdown
+    /* Item món ăn trong hóa đơn */
+    .food-item-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 0;
+        border-bottom: 1px dashed #F0F0F0;
+    }
+    .food-item-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .food-item-img-container {
+        position: relative;
+        width: 70px;
+        height: 70px;
+    }
+    .food-item-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 16px;
+    }
+    .food-number-tag {
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        background: #4A4A4A;
+        color: white;
+        font-size: 0.7rem;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 8px;
+    }
+    .food-details {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .food-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #333333;
+    }
+    .badge-container {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .category-badge {
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 4px;
+    }
+    .accuracy-badge {
+        background-color: #EDF2F7;
+        color: #4A5568;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 3px 8px;
+        border-radius: 4px;
+    }
+    .food-price {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #333333;
+    }
+    
+    /* Khu vực tổng cộng */
+    .total-box {
+        background-color: #FDFBF7;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 25px;
+        margin-bottom: 25px;
+    }
+    .total-label {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #8C8275;
+        letter-spacing: 0.5px;
+    }
+    .total-price-value {
+        font-size: 2.3rem;
+        font-weight: 800;
+        color: #435241;
+    }
+    
+    /* Khung hình thức thanh toán */
+    .payment-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #A39684;
+        text-align: center;
+        margin-bottom: 15px;
+        letter-spacing: 0.5px;
+    }
+    .payment-options {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    .payment-box {
+        flex: 1;
+        border-radius: 12px;
+        padding
