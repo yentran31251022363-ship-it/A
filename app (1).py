@@ -9,117 +9,39 @@ from tensorflow.keras.applications.efficientnet import preprocess_input
 import base64
 from io import BytesIO
 
-# Cấu hình trang cơ bản
+# ==========================================
+# 1. CẤU HÌNH TRANG CƠ BẢN VÀ MENU NGANG
+# ==========================================
 st.set_page_config(
     page_title="Hệ Thống Thanh Toán Khay Cơm AI",
     page_icon="🍲",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Bảng giá và Tên món ăn
-PRICE_MAP = {
-    "Cơm trắng": 10000,
-    "Trứng chiên": 25000,
-    "Khay inox (Trống)": 0,
-    "Đậu hũ sốt cà": 25000,
-    "Cá hú kho": 30000,
-    "Thịt kho trứng": 30000,
-    "Thịt kho": 25000,
-    "Canh chua": 25000,
-    "Sườn nướng": 30000,
-    "Canh rau": 7000,
-    "Rau xào": 10000
-}
-
-CLASS_NAMES = [
-    "Cơm trắng",
-    "Trứng chiên",
-    "Khay inox (Trống)",
-    "Đậu hũ sốt cà",
-    "Cá hú kho",
-    "Thịt kho trứng",
-    "Thịt kho",
-    "Canh chua",
-    "Sườn nướng",
-    "Canh rau",
-    "Rau xào"
-]
-
-# Hàm khởi tạo và tải Model (Sử dụng Cache để tải 1 lần)
-@st.cache_resource
-def init_model():
-    model_path = "canteen_model_STAGE1.keras"
-    model_url = "https://github.com/TienManh15072007/AI_FINALPROJECT_FOODTRAYREGCONITION/releases/download/model.py/canteen_model_STAGE2_latest.keras"
-    
-    if not os.path.exists(model_path):
-        response = requests.get(model_url, stream=True)
-        response.raise_for_status()
-        with open(model_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
-                    
-    return tf.keras.models.load_model(model_path)
-
-# Hàm tự động phân tích và căn lề khay cơm
-def auto_align_tray(img):
-    h, w, _ = img.shape
-    if w > h:
-        gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        gray_resized = cv2.resize(gray, (400, 300))
-        top_half = gray_resized[0:150, :]
-        bottom_half = gray_resized[150:300, :]
-        sobel_x_top = cv2.Sobel(top_half, cv2.CV_64F, 1, 0, ksize=3)
-        sobel_x_bottom = cv2.Sobel(bottom_half, cv2.CV_64F, 1, 0, ksize=3)
-        score_top = np.sum(np.abs(sobel_x_top))
-        score_bottom = np.sum(np.abs(sobel_x_bottom))
-        
-        if score_top < score_bottom:
-            img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
-        else:
-            img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-
-    h, w, _ = img.shape
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    gray_resized = cv2.resize(gray, (300, 400))
-    left_half = gray_resized[:, 0:150]
-    right_half = gray_resized[:, 150:300]
-    sobel_y_left = cv2.Sobel(left_half, cv2.CV_64F, 0, 1, ksize=3)
-    sobel_y_right = cv2.Sobel(right_half, cv2.CV_64F, 0, 1, ksize=3)
-    score_left = np.sum(np.abs(sobel_y_left))
-    score_right = np.sum(np.abs(sobel_y_right))
-
-    if score_left > score_right:
-        img = cv2.rotate(img, cv2.ROTATE_180)
-
-    return img
-
-# Phân loại Badge món ăn dựa trên tên
-def get_food_badge(food_name):
-    if "Canh" in food_name:
-        return "CANH", "#F5ECE1", "#9C6644"
-    elif "Rau" in food_name or "Xào" in food_name:
-        return "MÓN RAU XÀO", "#E8F5E9", "#2E7D32"
-    elif "Khay" in food_name:
-        return "TRỐNG", "#ECEFF1", "#455A64"
-    else:
-        return "MÓN MẶN", "#FBE9E7", "#D84315"
-
-# ==========================================
-# GIAO DIỆN CHIA TRANG BẰNG SIDEBAR
-# ==========================================
-# ------------------------------------------
-# CẤU HÌNH MENU NGANG PHÍA TRÊN VÀ CSS Ô VUÔNG
-# ------------------------------------------
-custom_style = """
+# Thêm CSS custom để ẩn Sidebar mặc định và tạo ô vuông thanh toán sang xịn giống Pic 2
+custom_ui_style = """
 <style>
-/* Ẩn hoàn toàn thanh bên mặc định của Streamlit nếu còn */
+/* Ẩn hoàn toàn thanh bên sidebar */
 [data-testid="stSidebar"] {
     display: none !important;
 }
+[data-testid="collapsedControl"] {
+    display: none !important;
+}
 
-/* Custom lại giao diện nút chọn hình thức thanh toán dạng Ô VUÔNG KHỐI giống Pic 2 */
+/* Ép kiểu khối Tab ngang phía trên rộng rãi, dễ nhìn giống Pic 1 */
+div[data-testid="stTabs"] {
+    margin-top: -30px;
+    margin-bottom: 20px;
+}
+div[data-testid="stTabs"] button {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    padding: 12px 24px !important;
+}
+
+/* BIẾN ST.RADIO THÀNH Ô VUÔNG KHỐI XINH ĐẸP GIỐNG PIC 2 */
 div[data-testid="stRadio"] > div {
     display: flex !important;
     flex-direction: row !important;
@@ -137,138 +59,156 @@ div[data-testid="stRadio"] label {
     transition: all 0.2s ease-in-out !important;
     box-shadow: 0 4px 10px rgba(0,0,0,0.02) !important;
 }
-/* Hiệu ứng khi rê chuột vào ô vuông */
+/* Hiệu ứng khi hover */
 div[data-testid="stRadio"] label:hover {
     border-color: #5D6B54 !important;
     background-color: #FDFCF7 !important;
     transform: translateY(-2px);
 }
-/* Style khi ô vuông được chọn */
+/* Style khi ô vuông được click chọn (Chuyển sang nền rêu nhạt, chữ đậm) */
 div[data-testid="stRadio"] [data-checked="true"] ~ label {
     border-color: #435241 !important;
     background-color: #EBF1EB !important;
-    font-weight: 700 !important;
     box-shadow: 0 4px 12px rgba(67, 82, 65, 0.15) !important;
 }
-/* Ẩn dấu chấm tròn mặc định của st.radio để thành ô vuông thuần túy */
+div[data-testid="stRadio"] [data-checked="true"] ~ label p {
+    font-weight: 700 !important;
+    color: #435241 !important;
+}
+/* Ẩn dấu chấm tròn radio mặc định */
 div[data-testid="stRadio"] input[type="radio"] {
     display: none !important;
 }
 div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
     margin: 0 !important;
     font-size: 1rem !important;
+    color: #4A3E3D !important;
 }
 </style>
 """
-st.markdown(custom_style, unsafe_allow_html=True)
+st.markdown(custom_ui_style, unsafe_allow_html=True)
 
-# Tạo thanh điều hướng ngang (Top Tabs) giống thiết kế Pic 1
-page = st.tabs(["🏠 Giới Thiệu Dự Án", "📷 Hệ Thống Nhận Diện", "📊 Góc Ẩm Thực AI"])
+# Khởi tạo Menu Ngang dạng Tabs phía trên cùng thay cho Sidebar cũ
+tabs = st.tabs(["🏠 Trang Chủ (Giới thiệu)", "📷 Hệ Thống Nhận Diện", "📊 Góc Ẩm Thực AI"])
 
-# Chuyển đổi tab được chọn thành biến page để khớp với logic `if/elif` hiện tại của bạn
-if page[0]:
-    page = "Giới Thiệu Dự Án"
-elif page[1]:
-    page = "Hệ Thống Nhận Diện"
-elif page[2]:
-    page = "Góc Ẩm Thực AI"
+# Bảng giá và Danh mục món ăn
+PRICE_MAP = {
+    "Cơm trắng": 10000,
+    "Trứng chiên": 25000,
+    "Khay inox (Trống)": 0,
+    "Đậu hũ sốt cà": 25000,
+    "Cá hú kho": 30000,
+    "Thịt kho trứng": 30000,
+    "Thịt kho": 25000,
+    "Canh chua": 25000,
+    "Sườn nướng": 30000,
+    "Canh rau": 7000,
+    "Rau xào": 10000
+}
 
-# ------------------------------------------
+CLASS_NAMES = [
+    "Cơm trắng", "Trứng chiên", "Khay inox (Trống)", "Đậu hũ sốt cà",
+    "Cá hú kho", "Thịt kho trứng", "Thịt kho", "Canh chua",
+    "Sườn nướng", "Canh rau", "Rau xào"
+]
+
+@st.cache_resource
+def init_model():
+    model_path = "canteen_model_STAGE1.keras"
+    model_url = "https://github.com/TienManh15072007/AI_FINALPROJECT_FOODTRAYREGCONITION/releases/download/model.py/canteen_model_STAGE2_latest.keras"
+    if not os.path.exists(model_path):
+        response = requests.get(model_url, stream=True)
+        response.raise_for_status()
+        with open(model_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+    return tf.keras.models.load_model(model_path)
+
+def auto_align_tray(img):
+    h, w, _ = img.shape
+    if w > h:
+        gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        gray_resized = cv2.resize(gray, (400, 300))
+        top_half = gray_resized[0:150, :]
+        bottom_half = gray_resized[150:300, :]
+        sobel_x_top = cv2.Sobel(top_half, cv2.CV_64F, 1, 0, ksize=3)
+        sobel_x_bottom = cv2.Sobel(bottom_half, cv2.CV_64F, 1, 0, ksize=3)
+        if np.sum(np.abs(sobel_x_top)) < np.sum(np.abs(sobel_x_bottom)):
+            img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        else:
+            img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+    h, w, _ = img.shape
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    gray_resized = cv2.resize(gray, (300, 400))
+    left_half = gray_resized[:, 0:150]
+    right_half = gray_resized[:, 150:300]
+    if np.sum(np.abs(cv2.Sobel(left_half, cv2.CV_64F, 0, 1, ksize=3))) > np.sum(np.abs(cv2.Sobel(right_half, cv2.CV_64F, 0, 1, ksize=3))):
+        img = cv2.rotate(img, cv2.ROTATE_180)
+    return img
+
+def get_food_badge(food_name):
+    if "Canh" in food_name: return "CANH", "#F5ECE1", "#9C6644"
+    elif "Rau" in food_name or "Xào" in food_name: return "MÓN RAU XÀO", "#E8F5E9", "#2E7D32"
+    elif "Khay" in food_name: return "TRỐNG", "#ECEFF1", "#455A64"
+    else: return "MÓN MẶN", "#FBE9E7", "#D84315"
+
+# ==========================================
 # TRANG 1: MARKETING & GIỚI THIỆU
-# ------------------------------------------
-if page == "Trang Chủ (Giới thiệu)":
+# ==========================================
+with tabs[0]:
     marketing_bg = """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap');
-    html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
-    .stApp {
-        background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url("https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80");
-        background-size: cover; background-position: center; background-attachment: fixed;
+    .marketing-wrapper {
+        font-family: 'Montserrat', sans-serif;
+        background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.85)), url("https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80");
+        background-size: cover; background-position: center; padding: 60px; border-radius: 24px; margin-top: 10px;
     }
-    h1, h2, h3, p, span, div { color: white !important; }
-    .main-title { font-size: 3.5rem; font-weight: 800; text-align: center; margin-top: 1vh; color: #F39C12 !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
-    .sub-title { font-size: 1.5rem; text-align: center; margin-bottom: 50px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+    .marketing-wrapper h1, .marketing-wrapper p { color: white !important; text-align: center; }
+    .main-title { font-size: 3.5rem; font-weight: 800; color: #F39C12 !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+    .sub-title { font-size: 1.4rem; margin-bottom: 40px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
     </style>
+    <div class="marketing-wrapper">
+        <h1 class='main-title'>CANTEEN AI SYSTEM</h1>
+        <p class='sub-title'>Giải pháp nhận diện khay cơm và thanh toán tự động bằng công nghệ Computer Vision</p>
+    </div>
     """
     st.markdown(marketing_bg, unsafe_allow_html=True)
-    st.markdown("<h1 class='main-title'>CANTEEN AI SYSTEM</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='sub-title'>Giải pháp nhận diện khay cơm và thanh toán tự động bằng công nghệ Computer Vision</p>", unsafe_allow_html=True)
-    
+    st.write("")
     col1, col2, col3 = st.columns(3)
-    with col1:
-        st.info("🎯 **Chính xác cao**\n\nNhận diện nhanh chóng từng món ăn trong khay với độ chính xác vượt trội.")
-    with col2:
-        st.success("⚡ **Tốc độ chớp nhoáng**\n\nXóa bỏ cảnh xếp hàng dài chờ tính tiền. Mọi thứ hoàn tất trong vài giây.")
-    with col3:
-        st.warning("📊 **Quản lý dễ dàng**\n\nHệ thống tự động xuất hóa đơn và thống kê doanh thu minh bạch.")
+    with col1: st.info("🎯 **Chính xác cao**\n\nNhận diện nhanh chóng từng món ăn trong khay với độ chính xác vượt trội.")
+    with col2: st.success("⚡ **Tốc độ chớp nhoáng**\n\nXóa bỏ cảnh xếp hàng dài chờ tính tiền. Mọi thứ hoàn tất trong vài giây.")
+    with col3: st.warning("📊 **Quản lý dễ dàng**\n\nHệ thống tự động xuất hóa đơn và thống kê doanh thu minh bạch.")
 
-# ------------------------------------------
+# ==========================================
 # TRANG 2: HỆ THỐNG XỬ LÝ CHÍNH
-# ------------------------------------------
-# ------------------------------------------
-# TRANG 2: HỆ THỐNG XỬ LÝ CHÍNH (ĐÃ CẬP NHẬT)
-# ------------------------------------------
-elif page == "Hệ Thống Nhận Diện":
+# ==========================================
+with tabs[1]:
     app_bg = """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    html, body, [class*="css"], .stApp { 
-        font-family: 'Inter', sans-serif; 
-        background-color: #FDF6E2 !important; 
-        color: #000000 !important;
-    }
-    .step-banner { 
-        background: #586F56; 
-        color: white !important; 
-        padding: 12px 20px; 
-        border-radius: 8px; 
-        font-weight: 600; 
-        font-size: 1.1rem; 
-        margin-bottom: 15px; 
-        margin-top: 25px; 
-    }
-    .step-banner * { color: white !important; }
-    [data-testid="stFileUploadDropzone"] { 
-        background-color: #ffffff !important; 
-        border: 2px dashed #586F56 !important; 
-        border-radius: 12px !important; 
-    }
-    
-    .canteen-invoice-card { 
-        background-color: #FFFFFF; 
-        border: 1px solid #E0D4B7; 
-        border-radius: 24px; 
-        padding: 30px; 
-        box-shadow: 0 10px 25px rgba(0,0,0,0.04); 
-    }
+    .main-body-style { font-family: 'Inter', sans-serif; }
+    .step-banner { background: #586F56; color: white !important; padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 1.1rem; margin-bottom: 15px; margin-top: 10px; }
+    .canteen-invoice-card { background-color: #FFFFFF; border: 1px solid #E0D4B7; border-radius: 24px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.04); }
     .invoice-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0C5; padding-bottom: 15px; margin-bottom: 20px; }
-    .invoice-title { font-size: 1.8rem; font-weight: 700; color: #264653 !important; margin: 0; }
-    .invoice-subtitle { font-size: 0.95rem; color: #666666 !important; margin-top: 5px; }
+    .invoice-title { font-size: 1.6rem; font-weight: 700; color: #264653 !important; margin: 0; }
+    .invoice-subtitle { font-size: 0.95rem; color: #666666 !important; }
     .model-badge { background-color: #E2E8F0; color: #4A5568 !important; font-family: monospace; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
-    .receipt-btn { background-color: #586F56; color: white !important; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
-    
     .food-item-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px dashed #EAE0C5; }
     .food-item-left { display: flex; align-items: center; gap: 15px; }
     .food-item-img-container { position: relative; width: 70px; height: 70px; }
     .food-item-img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
     .food-number-tag { position: absolute; top: -5px; left: -5px; background: #4A4A4A; color: white !important; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 8px; }
-    .food-details { display: flex; flex-direction: column; gap: 4px; }
     .food-title { font-size: 1.05rem; font-weight: 600; color: #111111 !important; }
-    .badge-container { display: flex; gap: 8px; align-items: center; }
+    .badge-container { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
     .category-badge { font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
     .accuracy-badge { background-color: #EDF2F7; color: #4A5568 !important; font-size: 0.75rem; font-weight: 500; padding: 3px 8px; border-radius: 4px; }
     .food-price { font-size: 1.15rem; font-weight: 700; color: #111111 !important; }
-    
-    .total-box { background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px; }
-    .total-label { font-size: 1.1rem; font-weight: bold; color: #5D5446 !important; letter-spacing: 0.5px; }
-    .total-price-value { font-size: 2.3rem; font-weight: 800; color: #435241 !important; }
-    
-    label, p, span, h1, h2, h3, h4, div { color: #000000 !important; }
     </style>
     """
     st.markdown(app_bg, unsafe_allow_html=True)
-
-    with st.spinner("⏳ Khởi động động cơ AI, vui lòng đợi trong giây lát..."):
+    
+    with st.spinner("⏳ Khởi động động cơ AI..."):
         model = init_model()
 
     st.markdown("<h2 style='text-align: center; color: #264653 !important;'>HỆ THỐNG KIỂM TRA & THANH TOÁN KHAY CƠM TỰ ĐỘNG</h2>", unsafe_allow_html=True)
@@ -280,112 +220,27 @@ elif page == "Hệ Thống Nhận Diện":
         st.markdown("<div class='step-banner'>📸 BƯỚC 1 & 2: THU THẬP & CĂN LỀ KHAY ĂN</div>", unsafe_allow_html=True)
         camera_file = st.camera_input("Chụp ảnh khay ăn trực tiếp")
         uploaded_file = st.file_uploader("Hoặc tải ảnh lên từ thiết bị", type=["jpg", "jpeg", "png"])
-        
         rotation_mode = st.radio(
             "Góc xoay hiệu chỉnh tối ưu từ AI Co-pilot:",
             ("Tự động chỉnh hướng", "Giữ nguyên (0°)", "Xoay 90° CW", "Xoay 90° CCW", "Xoay 180°"),
-            horizontal=True
+            key="tray_rotation"
         )
 
-# ------------------------------------------
-# TRANG 2: HỆ THỐNG XỬ LÝ CHÍNH
-# ------------------------------------------
-elif page == "Hệ Thống Nhận Diện":
-    app_bg = """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    html, body, [class*="css"], .stApp { 
-        font-family: 'Inter', sans-serif; 
-        background-color: #FDF6E2 !important; 
-        color: #000000 !important;
-    }
-    .step-banner { 
-        background: #586F56; 
-        color: white !important; 
-        padding: 12px 20px; 
-        border-radius: 8px; 
-        font-weight: 600; 
-        font-size: 1.1rem; 
-        margin-bottom: 15px; 
-        margin-top: 25px; 
-    }
-    .step-banner * { color: white !important; }
-    [data-testid="stFileUploadDropzone"] { 
-        background-color: #ffffff !important; 
-        border: 2px dashed #586F56 !important; 
-        border-radius: 12px !important; 
-    }
-    
-    .canteen-invoice-card { 
-        background-color: #FFFFFF; 
-        border: 1px solid #E0D4B7; 
-        border-radius: 24px; 
-        padding: 30px; 
-        box-shadow: 0 10px 25px rgba(0,0,0,0.04); 
-    }
-    .invoice-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0C5; padding-bottom: 15px; margin-bottom: 20px; }
-    .invoice-title { font-size: 1.8rem; font-weight: 700; color: #264653 !important; margin: 0; }
-    .invoice-subtitle { font-size: 0.95rem; color: #666666 !important; margin-top: 5px; }
-    .model-badge { background-color: #E2E8F0; color: #4A5568 !important; font-family: monospace; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
-    
-    .food-item-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px dashed #EAE0C5; }
-    .food-item-left { display: flex; align-items: center; gap: 15px; }
-    .food-item-img-container { position: relative; width: 70px; height: 70px; }
-    .food-item-img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
-    .food-number-tag { position: absolute; top: -5px; left: -5px; background: #4A4A4A; color: white !important; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 8px; }
-    .food-details { display: flex; flex-direction: column; gap: 4px; }
-    .food-title { font-size: 1.05rem; font-weight: 600; color: #111111 !important; }
-    .badge-container { display: flex; gap: 8px; align-items: center; }
-    .category-badge { font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
-    .accuracy-badge { background-color: #EDF2F7; color: #4A5568 !important; font-size: 0.75rem; font-weight: 500; padding: 3px 8px; border-radius: 4px; }
-    .food-price { font-size: 1.15rem; font-weight: 700; color: #111111 !important; }
-    
-    label, p, span, h1, h2, h3, h4, div { color: #000000 !important; }
-    </style>
-    """
-    st.markdown(app_bg, unsafe_allow_html=True)
-
-    with st.spinner("⏳ Khởi động động cơ AI, vui lòng đợi trong giây lát..."):
-        model = init_model()
-
-    st.markdown("<h2 style='text-align: center; color: #264653 !important;'>HỆ THỐNG KIỂM TRA & THANH TOÁN KHAY CƠM TỰ ĐỘNG</h2>", unsafe_allow_html=True)
-    st.write("---")
-
-    col_left, col_right = st.columns([1.1, 1.3], gap="large")
-
-    with col_left:
-        st.markdown("<div class='step-banner'>📸 BƯỚC 1 & 2: THU THẬP & CĂN LỀ KHAY ĂN</div>", unsafe_allow_html=True)
-        camera_file = st.camera_input("Chụp ảnh khay ăn trực tiếp")
-        uploaded_file = st.file_uploader("Hoặc tải ảnh lên từ thiết bị", type=["jpg", "jpeg", "png"])
-        
-        rotation_mode = st.radio(
-            "Góc xoay hiệu chỉnh tối ưu từ AI Co-pilot:",
-            ("Tự động chỉnh hướng", "Giữ nguyên (0°)", "Xoay 90° CW", "Xoay 90° CCW", "Xoay 180°"),
-            horizontal=True
-        )
-
-    # --- ĐÂY LÀ VỊ TRÍ BẮT ĐẦU THAY THẾ (TỪ ACTIVE_FILE) ---
     active_file = camera_file if camera_file is not None else uploaded_file
 
     if active_file is not None:
         image = Image.open(active_file).convert('RGB')
         img_array = np.array(image)
 
-        if rotation_mode == "Tự động chỉnh hướng":
-            img_aligned = auto_align_tray(img_array)
-        elif rotation_mode == "Xoay 90° CW":
-            img_aligned = cv2.rotate(img_array, cv2.ROTATE_90_CLOCKWISE)
-        elif rotation_mode == "Xoay 90° CCW":
-            img_aligned = cv2.rotate(img_array, cv2.ROTATE_90_COUNTERCLOCKWISE)
-        elif rotation_mode == "Xoay 180°":
-            img_aligned = cv2.rotate(img_array, cv2.ROTATE_180)
-        else:
-            img_aligned = img_array
+        if rotation_mode == "Tự động chỉnh hướng": img_aligned = auto_align_tray(img_array)
+        elif rotation_mode == "Xoay 90° CW": img_aligned = cv2.rotate(img_array, cv2.ROTATE_90_CLOCKWISE)
+        elif rotation_mode == "Xoay 90° CCW": img_aligned = cv2.rotate(img_array, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        elif rotation_mode == "Xoay 180°": img_aligned = cv2.rotate(img_array, cv2.ROTATE_180)
+        else: img_aligned = img_array
 
         with col_left:
             st.image(img_aligned, use_container_width=True, caption="Khay cơm chuẩn hóa đưa vào AI core")
 
-        # Phân chia vùng cắt của khay ăn
         h, w, _ = img_aligned.shape
         regions = {
             "Cơm trắng": img_aligned[int(h*0.02):int(h*0.44), int(w*0.02):int(w*0.54)],
@@ -397,23 +252,13 @@ elif page == "Hệ Thống Nhận Diện":
 
         with col_right:
             st.markdown("<div class='canteen-invoice-card'>", unsafe_allow_html=True)
-            st.markdown("""
-            <div class='invoice-header'>
-                <div>
-                    <h3 class='invoice-title'>🧾 KẾT QUẢ TÍNH TIỀN</h3>
-                    <div class='invoice-subtitle'>AI kết xuất hóa đơn tự động</div>
-                </div>
-                <div class='model-badge'>EfficientNet Core V2</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("<div class='invoice-header'><div><h3 class='invoice-title'>🧾 KẾT QUẢ TÍNH TIỀN</h3><div class='invoice-subtitle'>AI kết xuất hóa đơn tự động</div></div><div class='model-badge'>EfficientNet Core V2</div></div>", unsafe_allow_html=True)
 
             total_bill = 0
             idx = 1
 
             for region_name, region_img in regions.items():
-                if region_img.shape[0] == 0 or region_img.shape[1] == 0:
-                    continue
-                
+                if region_img.shape[0] == 0 or region_img.shape[1] == 0: continue
                 img_resized = cv2.resize(region_img, (224, 224))
                 img_batch = np.expand_dims(img_resized, axis=0).astype('float32')
                 img_batch = preprocess_input(img_batch)
@@ -421,13 +266,10 @@ elif page == "Hệ Thống Nhận Diện":
                 predictions = model.predict(img_batch, verbose=0)
                 predicted_class_idx = np.argmax(predictions[0])
                 confidence = np.max(predictions[0]) * 100
-                
                 food_name = CLASS_NAMES[predicted_class_idx]
-                price = PRICE_MAP.get(food_name, 0)
                 
-                if food_name == "Khay inox (Trống)":
-                    continue
-                    
+                if food_name == "Khay inox (Trống)": continue
+                price = PRICE_MAP.get(food_name, 0)
                 total_bill += price
                 badge_text, bg_color, text_color = get_food_badge(food_name)
 
@@ -442,303 +284,111 @@ elif page == "Hệ Thống Nhận Diện":
                             <div class='food-number-tag'>#{idx}</div>
                         </div>
                         <div class='food-details'>
-                            <div class='food-title'>{food_name}</div>
+                            <div class='food-title' style='color:#111111 !important;'>{food_name}</div>
                             <div class='badge-container'>
                                 <span class='category-badge' style='background-color: {bg_color}; color: {text_color} !important;'>{badge_text}</span>
                                 <span class='accuracy-badge'>Độ tin cậy: {confidence:.0f}%</span>
                             </div>
                         </div>
                     </div>
-                    <div class='food-price'>{price:,}đ</div>
+                    <div class='food-price' style='color:#111111 !important;'>{price:,}đ</div>
                 </div>
                 """, unsafe_allow_html=True)
                 idx += 1
 
-            # 1. PHẦN TÍNH TỔNG BILL TỰ ĐỘNG (Đã xóa ô đen code thừa)
+            # KHỐI TỔNG BILL TỰ ĐỘNG XÓA BỎ Ô ĐEN
             st.markdown(f"""
-            <div class='total-box' style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'>
-                <span class='total-label' style='font-size: 1.1rem; font-weight: bold; color: #5D5446 !important;'>TỔNG CỘNG:</span>
-                <span class='total-price-value' style='font-size: 2.3rem; font-weight: 800; color: #435241 !important;'>{total_bill:,}đ</span>
+            <div style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'>
+                <span style='font-size: 1.1rem; font-weight: bold; color: #5D5446 !important;'>TỔNG CỘNG:</span>
+                <span style='font-size: 2.3rem; font-weight: 800; color: #435241 !important;'>{total_bill:,}đ</span>
             </div>
             """, unsafe_allow_html=True)
 
-            # 2. KHU VỰC LỰA CHỌN PHƯƠNG THỨC THANH TOÁN (Ô vuông xinh đẹp nằm ngang)
-            st.markdown("### 💳 PHƯƠNG THỨC THANH TOÁN")
-            st.write("Chọn hình thức thanh toán phù hợp:")
-
+            # Ô VUÔNG THANH TOÁN (Cập nhật từ st.radio đã áp CSS khối vuông bên trên)
+            st.markdown("<p style='font-weight: 700; margin-bottom: 2px; color:#4A3E3D !important;'>💳 PHƯƠNG THỨC THANH TOÁN</p>", unsafe_allow_html=True)
             pay_option = st.radio(
-                "Chọn hình thức thanh toán phù hợp:",
-                options=["💵 Tiền mặt", "📱 Chuyển khoản (Quét mã QR)", "🪪 Thẻ SV RFID"],
-                horizontal=True,
+                "Chọn hình thức thanh toán:",
+                options=["💵 Tiền mặt", "📱 Quét mã QR", "🪪 Thẻ SV RFID"],
+                key="payment_checkout",
                 label_visibility="collapsed"
             )
 
             st.write("")
-
-            # Banner chỉ dẫn tương ứng với ô được chọn
-            if pay_option == "💵 Tiền mặt":
-                st.success("💰 **Hệ thống sẵn sàng:** Vui lòng nhận tiền mặt từ khách hàng và ấn xác nhận kết toán.")
-            elif pay_option == "📱 Chuyển khoản (Quét mã QR)":
-                st.info("📲 **Quét mã nhanh:** Hệ thống đang hiển thị QR động theo số tiền tổng bill trên màn hình phụ.")
-            elif pay_option == "🪪 Thẻ SV RFID":
-                st.warning("💳 **Chờ quẹt thẻ:** Vui lòng áp thẻ sinh viên vào thiết bị đọc thẻ RFID để thanh toán.")
+            if pay_option == "💵 Tiền mặt": st.success("💰 **Hệ thống sẵn sàng:** Vui lòng nhận tiền mặt và xác nhận hoàn tất đơn.")
+            elif pay_option == "📱 Quét mã QR": st.info("📲 **Quét mã nhanh:** Hệ thống đã đồng bộ cổng QR động thanh toán.")
+            elif pay_option == "🪪 Thẻ SV RFID": st.warning("💳 **Chờ quẹt thẻ:** Vui lòng áp thẻ sinh viên vào đầu đọc RFID.")
 
             st.write("")
-            if st.button("XÁC NHẬN HOÀN TẤT HÓA ĐƠN", use_container_width=True):
-                st.toast(f"🎉 Thanh toán thành công {total_bill:,}đ qua phương thức **{pay_option}**!", icon="✅")
-                
+            if st.button("XÁC NHẬN HOÀN TẤT HÓA ĐƠN", key="btn_confirm_invoice"):
+                st.toast(f"🎉 Đã thanh toán {total_bill:,}đ thành công qua hình thức **{pay_option}**!", icon="✅")
             st.markdown("</div>", unsafe_allow_html=True)
-    # --- ĐÂY LÀ VỊ TRÍ KẾT THÚC CỦA TRANG 2 ---
-# ------------------------------------------
-# TRANG 3: GÓC ẨM THỰC AI
-# ------------------------------------------
-# ------------------------------------------
-# TRANG 3: THỐNG KÊ DOANH THU & BÁN NHANH (Thay cho Góc Ẩm Thực AI)
-# ------------------------------------------
-elif page == "Góc Ẩm Thực AI":
+
+# ==========================================
+# TRANG 3: GÓC ẨM THỰC AI (DASHBOARD)
+# ==========================================
+with tabs[2]:
     dashboard_css = """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    html, body, [class*="css"], .stApp {
-        font-family: 'Inter', sans-serif;
-        background-color: #FDF9F0 !important;
-    }
-    
-    /* Toàn bộ chữ mặc định thành màu tối của giao diện */
-    p, span, h1, h2, h3, h4, div { color: #4A3E3D !important; }
-
-    /* CSS cho 4 thẻ KPI hàng đầu */
-    .kpi-container {
-        display: flex; gap: 20px; margin-bottom: 25px;
-    }
-    .kpi-card {
-        flex: 1; background: #FFFFFF; border-radius: 20px; padding: 20px;
-        box-shadow: 0 4px 15px rgba(165, 145, 120, 0.05);
-        border: 1px solid #F3EFE6; display: flex; justify-content: space-between; align-items: center;
-    }
-    .kpi-title { font-size: 0.75rem; font-weight: 700; color: #A59E92 !important; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-card { background: #FFFFFF; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(165,145,120,0.05); border: 1px solid #F3EFE6; display: flex; justify-content: space-between; align-items: center; }
+    .kpi-title { font-size: 0.75rem; font-weight: 700; color: #A59E92 !important; text-transform: uppercase; }
     .kpi-value { font-size: 1.8rem; font-weight: 700; color: #2D392E !important; margin-top: 5px; }
     .kpi-sub { font-size: 0.8rem; color: #10B981 !important; font-weight: 600; margin-top: 5px; }
-    .kpi-sub-gray { font-size: 0.8rem; color: #A59E92 !important; margin-top: 5px; }
-    .kpi-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-
-    /* Nội dung các Card lớn */
-    .dashboard-card {
-        background: #FFFFFF; border-radius: 24px; padding: 25px;
-        box-shadow: 0 4px 15px rgba(165, 145, 120, 0.05); border: 1px solid #F3EFE6; height: 100%;
-    }
-    .card-title { font-size: 1.3rem; font-weight: 700; color: #2D392E !important; margin-bottom: 5px; }
-    .card-subtitle { font-size: 0.85rem; color: #A59E92 !important; margin-bottom: 20px; }
-
-    /* CSS Hàng món ăn bán chạy */
-    .food-rank-row {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 15px; background: #FDFCF7; border-radius: 16px; margin-bottom: 12px; border: 1px solid #F7F4EC;
-    }
-    .rank-number {
-        background: #5D6B54; color: white !important; font-weight: 700; width: 32px; height: 32px;
-        border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 15px;
-    }
-    .food-info-name { font-weight: 600; font-size: 1rem; color: #2D392E !important; }
-    .food-info-revenue { font-size: 0.8rem; color: #A59E92 !important; margin-top: 2px; }
-    .select-count-tag { background: #E6ECE6; color: #435241 !important; font-weight: 600; font-size: 0.85rem; padding: 6px 14px; border-radius: 8px; }
-
-    /* CSS Cột bán cơm nhanh */
-    .alert-banner {
-        background: #FFF7EE; border: 1px solid #FFE7CF; border-radius: 12px; padding: 12px 15px;
-        display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 20px;
-    }
-    .quick-sell-price-box {
-        border: 1px solid #F3EFE6; background: #FAFAFA; border-radius: 16px; padding: 20px;
-        display: flex; justify-content: space-between; align-items: center; margin-top: 15px;
-    }
-    .quick-sell-label { font-size: 0.8rem; font-weight: 700; color: #A59E92 !important; text-transform: uppercase; }
-    .quick-sell-value { font-size: 1.6rem; font-weight: 800; color: #2D392E !important; }
-    
-    /* Custom style cho Nút bấm của nhà bếp */
-    div.stButton > button {
-        background-color: #435241 !important; color: white !important;
-        border-radius: 12px !important; border: none !important;
-        padding: 12px 24px !important; font-weight: 600 !important; font-size: 1rem !important;
-        width: 100%; transition: all 0.2s;
-    }
-    div.stButton > button:hover { background-color: #333F31 !important; transform: translateY(-1px); }
-    
-    .footer-note { font-size: 0.8rem; color: #A59E92 !important; font-style: italic; margin-top: 25px; line-height: 1.4; }
+    .kpi-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #EFF6F0; }
+    .dashboard-card { background: #FFFFFF; border-radius: 24px; padding: 25px; box-shadow: 0 4px 15px rgba(165,145,120,0.05); border: 1px solid #F3EFE6; height: 100%; }
+    .card-title { font-size: 1.25rem; font-weight: 700; color: #2D392E !important; }
+    .food-rank-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #FDFCF7; border-radius: 16px; margin-bottom: 10px; border: 1px solid #F7F4EC; }
+    .rank-number { background: #5D6B54; color: white !important; font-weight: 700; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
+    .select-count-tag { background: #E6ECE6; color: #435241 !important; font-weight: 600; font-size: 0.85rem; padding: 6px 12px; border-radius: 8px; }
+    .quick-sell-price-box { border: 1px solid #F3EFE6; background: #FAFAFA; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 15px; }
     </style>
     """
     st.markdown(dashboard_css, unsafe_allow_html=True)
 
-    # ------------------------------------------
-    # HÀNG 1: 4 THẺ KPI TRÊN CÙNG
-    # ------------------------------------------
+    # 4 THÈ KPI HÀNG ĐẦU
     col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.markdown("""
-        <div class="kpi-card">
-            <div>
-                <div class="kpi-title">Tổng doanh thu quầy</div>
-                <div class="kpi-value">374.500đ</div>
-                <div class="kpi-sub">↗ +12.4% so với hôm qua</div>
-            </div>
-            <div class="kpi-icon" style="background: #EFF6F0;"><span style="font-size: 20px;">🪙</span></div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with col2:
-        st.markdown("""
-        <div class="kpi-card">
-            <div>
-                <div class="kpi-title">Tổng số khay bán ra</div>
-                <div class="kpi-value">13 khay</div>
-                <div class="kpi-sub-gray">Đã thanh toán kiểm soát</div>
-            </div>
-            <div class="kpi-icon" style="background: #FDF5E6;"><span style="font-size: 20px;">🥞</span></div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with col3:
-        st.markdown("""
-        <div class="kpi-card">
-            <div>
-                <div class="kpi-title">Giá khay trung bình</div>
-                <div class="kpi-value">28.808đ</div>
-                <div class="kpi-sub-gray">Báo cáo thực đơn tự động</div>
-            </div>
-            <div class="kpi-icon" style="background: #F0F7FF;"><span style="font-size: 20px;">📈</span></div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with col4:
-        st.markdown("""
-        <div class="kpi-card">
-            <div>
-                <div class="kpi-title">Cổng camera giám sát</div>
-                <div class="kpi-value" style="font-size: 1.4rem; margin-top: 8px;">CAM–01 ACTIVE</div>
-                <div class="kpi-sub" style="color: #2E7D32 !important;">🟢 17/17 món được nạp</div>
-            </div>
-            <div class="kpi-icon" style="background: #E8F5E9;"><span style="font-size: 20px;">📷</span></div>
-        </div>
-        """, unsafe_allow_html=True)
+    with col1: st.markdown('<div class="kpi-card"><div><div class="kpi-title">Tổng doanh thu quầy</div><div class="kpi-value">374.500đ</div><div class="kpi-sub">↗ +12.4% so với hôm qua</div></div><div class="kpi-icon">🪙</div></div>', unsafe_allow_html=True)
+    with col2: st.markdown('<div class="kpi-card"><div><div class="kpi-title">Tổng số khay bán ra</div><div class="kpi-value">13 khay</div><div style="font-size:0.8rem; color:#A59E92 !important; margin-top:5px;">Kiểm soát tự động</div></div><div class="kpi-icon" style="background:#FDF5E6;">🥞</div></div>', unsafe_allow_html=True)
+    with col3: st.markdown('<div class="kpi-card"><div><div class="kpi-title">Giá khay trung bình</div><div class="kpi-value">28.808đ</div><div style="font-size:0.8rem; color:#A59E92 !important; margin-top:5px;">Thực đơn quầy</div></div><div class="kpi-icon" style="background:#F0F7FF;">📈</div></div>', unsafe_allow_html=True)
+    with col4: st.markdown('<div class="kpi-card"><div><div class="kpi-title">Cổng camera giám sát</div><div class="kpi-value" style="font-size:1.3rem; margin-top:8px; color:#2E7D32 !important;">CAM–01 ACTIVE</div><div class="kpi-sub">🟢 Kết nối ổn định</div></div><div class="kpi-icon" style="background:#E8F5E9;">📷</div></div>', unsafe_allow_html=True)
 
     st.write("")
-
-    # ------------------------------------------
-    # HÀNG 2: XU HƯỚNG DOANH THU & PHƯƠNG THỨC THANH TOÁN
-    # ------------------------------------------
     col_chart_left, col_chart_right = st.columns([1.7, 1.1])
-    
     with col_chart_left:
-        st.markdown('<div class="dashboard-card">', unsafe_allow_html=True)
-        st.markdown('<div class="card-title">Xu Hướng Doanh Thu 7 Ngày Qua</div>', unsafe_allow_html=True)
-        st.markdown('<div class="card-subtitle">Dữ liệu được cập nhật thực tế từ quầy thông tin</div>', unsafe_allow_html=True)
-        
-        # Tạo Mock Data biểu đồ đường theo đúng hình ảnh mẫu
-        chart_data = {
-            "Ngày": ["03/06", "04/06", "05/06", "06/06", "07/06", "08/06", "09/06"],
-            "Doanh thu ngày (đ)": [50000, 62000, 72000, 48000, 55000, 82000, 0]
-        }
+        st.markdown('<div class="dashboard-card"><div class="card-title">Xu Hướng Doanh Thu 7 Ngày Qua</div><div style="font-size:0.85rem; color:#A59E92 !important; margin-bottom:15px;">Dữ liệu cập nhật thời gian thực</div>', unsafe_allow_html=True)
+        chart_data = {"Ngày": ["03/06", "04/06", "05/06", "06/06", "07/06", "08/06", "09/06"], "Doanh thu ngày (đ)": [50000, 62000, 72000, 48000, 55000, 82000, 35000]}
         st.area_chart(data=chart_data, x="Ngày", y="Doanh thu ngày (đ)", color="#5D6B54")
         st.markdown('</div>', unsafe_allow_html=True)
         
     with col_chart_right:
-        st.markdown('<div class="dashboard-card">', unsafe_allow_html=True)
-        st.markdown('<div class="card-title">Phương thức thanh toán</div>', unsafe_allow_html=True)
-        st.markdown('<div class="card-subtitle">Tỷ lệ sử dụng dòng tiền</div>', unsafe_allow_html=True)
-        
-        # Thiết lập cột hiển thị dữ liệu thanh toán trực quan
-        st.markdown("""
-        <div style="text-align: center; margin-bottom: 20px; padding: 15px; background: #FAF8F5; border-radius: 50%; width: 120px; height: 120px; margin: 0 auto 20px auto; border: 6px solid #5D6B54; display: flex; flex-direction: column; justify-content: center;">
-            <span style="font-size: 0.7rem; color: #A59E92 !important; font-weight: bold;">DOANH SỐ</span>
-            <span style="font-size: 1.05rem; font-weight: 700; color: #2D392E !important;">374.500đ</span>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        pay_methods = [
-            {"name": "🟢 Thẻ Sinh Viên", "val": "179.000đ"},
-            {"name": "🔴 Ví MoMo", "val": "138.500đ"},
-            {"name": "🔵 QR Ngân Hàng", "val": "27.000đ"},
-            {"name": "🟡 Tiền Mặt", "val": "30.000đ"}
-        ]
+        st.markdown('<div class="dashboard-card"><div class="card-title">Phương thức thanh toán</div><div style="font-size:0.85rem; color:#A59E92 !important; margin-bottom:15px;">Tỷ lệ sử dụng dòng tiền</div>', unsafe_allow_html=True)
+        pay_methods = [{"name": "🟢 Thẻ Sinh Viên", "val": "179.000đ"}, {"name": "🔴 Ví MoMo", "val": "138.500đ"}, {"name": "🔵 QR Ngân Hàng", "val": "27.000đ"}, {"name": "🟡 Tiền Mặt", "val": "30.000đ"}]
         for m in pay_methods:
-            st.markdown(f"""
-            <div style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 8px; border-bottom: 1px dashed #F3EFE6; padding-bottom: 4px;">
-                <span style="font-weight: 500;">{m['name']}</span>
-                <span style="font-weight: 700; color: #2D392E !important;">{m['val']}</span>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 12px; border-bottom: 1px dashed #F3EFE6; padding-bottom: 4px;"><span style="color:#2D392E !important;">{m["name"]}</span><span style="font-weight: 700; color:#2D392E !important;">{m["val"]}</span></div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.write("")
-
-    # ------------------------------------------
-    # HÀNG 3: XU HƯỚNG ĐĨA ĂN BÁN CHẠY & BÁN CƠM NHANH TẠI QUẦY
-    # ------------------------------------------
     col_bottom_left, col_bottom_right = st.columns([1.4, 1.4])
-    
     with col_bottom_left:
-        st.markdown('<div class="dashboard-card">', unsafe_allow_html=True)
-        st.markdown('<div class="card-title">Xu hướng đĩa ăn bán chạy</div>', unsafe_allow_html=True)
-        st.markdown('<div class="card-subtitle">Báo cáo top 5 món ăn sinh viên yêu mến nhất</div>', unsafe_allow_html=True)
-        
-        top_foods = [
-            {"rank": "#1", "name": "Sườn xào chua ngọt", "rev": "75.000đ", "count": "3 lượt chọn"},
-            {"rank": "#2", "name": "Rau muống xào tỏi", "rev": "15.000đ", "count": "3 lượt chọn"},
-            {"rank": "#3", "name": "Canh bắp cải", "rev": "15.000đ", "count": "3 lượt chọn"},
-            {"rank": "#4", "name": "Trứng rán hành tây", "rev": "24.000đ", "count": "3 lượt chọn"},
-            {"rank": "#5", "name": "Ba chỉ heo luộc", "rev": "54.000đ", "count": "3 lượt chọn"}
-        ]
-        
+        st.markdown('<div class="dashboard-card"><div class="card-title">Xu hướng đĩa ăn bán chạy</div><div style="font-size:0.85rem; color:#A59E92 !important; margin-bottom:15px;">Báo cáo top món ăn sinh viên yêu thích nhất</div>', unsafe_allow_html=True)
+        top_foods = [{"rank": "#1", "name": "Sườn xào chua ngọt", "rev": "75.000đ", "count": "3 lượt"}, {"rank": "#2", "name": "Rau muống xào tỏi", "rev": "15.000đ", "count": "3 lượt"}, {"rank": "#3", "name": "Canh bắp cải", "rev": "15.000đ", "count": "3 lượt"}]
         for food in top_foods:
-            st.markdown(f"""
-            <div class="food-rank-row">
-                <div style="display: flex; align-items: center;">
-                    <div class="rank-number">{food['rank']}</div>
-                    <div>
-                        <div class="food-info-name">{food['name']}</div>
-                        <div class="food-info-revenue">Doanh thu tích lũy: {food['rev']}</div>
-                    </div>
-                </div>
-                <div class="select-count-tag">{food['count']}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div class="food-rank-row"><div style="display: flex; align-items: center;"><div class="rank-number">{food["rank"]}</div><div><div class="food-info-name">{food["name"]}</div><div class="food-info-revenue">Tích lũy: {food["rev"]}</div></div></div><div class="select-count-tag">{food["count"]}</div></div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
     with col_bottom_right:
-        st.markdown('<div class="dashboard-card">', unsafe_allow_html=True)
-        st.markdown('<div class="card-title">Bán cơm nhanh tại quầy nhanh</div>', unsafe_allow_html=True)
-        st.markdown('<div class="card-subtitle">Cách ghi nhận đơn cơm sinh viên nhanh không qua Camera</div>', unsafe_allow_html=True)
+        st.markdown('<div class="dashboard-card"><div class="card-title">Bán cơm nhanh tại quầy</div><div style="font-size:0.85rem; color:#A59E92 !important; margin-bottom:15px;">Ghi nhận đơn cơm nhanh không qua Camera</div>', unsafe_allow_html=True)
+        st.markdown('<div class="quick-sell-price-box"><div><div style="font-size: 0.8rem; font-weight: 700; color: #A59E92 !important; text-transform: uppercase;">Giá khay cơm Kiosk hiện tại:</div><div style="font-size: 1.6rem; font-weight: 800; color: #2D392E !important;">35.000đ</div></div></div>', unsafe_allow_html=True)
         
-        st.write("Nhân viên có thể nhanh chóng chọn khay cơm mẫu đã nạp sẵn ở tab Kiosk và trực tiếp ghi nhận hóa đơn thanh toán tiền mặt/Momo để hệ thống kiểm soát thống kê doanh số.")
-        
-        # Thẻ tổng kết hóa đơn hôm nay
-        st.markdown("""
-        <div class="alert-banner">
-            <span style="font-weight: 600; color: #C2780E !important;">ℹ️ Tổng kết doanh số quầy hôm nay</span>
-            <span style="background: #FFFFFF; border: 1px solid #FFE7CF; padding: 2px 10px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; color: #C2780E !important;">0 bills</span>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Thẻ hiển thị giá khay cơm mẫu đang chờ
-        st.markdown("""
-        <div class="quick-sell-price-box">
-            <div>
-                <div class="quick-sell-label">Giá khay cơm Kiosk đang chờ:</div>
-                <div class="quick-sell-value">35.000đ</div>
-            </div>
-            <div></div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("<p style='font-weight: 600; margin-bottom: 5px; color:#4A3E3D !important;'>Hình thức thanh toán tại quầy:</p>", unsafe_allow_html=True)
+        payment_choice = st.radio(
+            "Chọn hình thức thanh toán nhanh:",
+            options=["💵 Tiền mặt", "💳 Quẹt thẻ (POS / Ngân hàng)"],
+            key="quick_payment_choice",
+            label_visibility="collapsed"
+        )
         
         st.write("")
-        # Nút bấm tích hợp tính năng Streamlit thực tế
-        if st.button("BÁN CƠM NHANH BẰNG TIỀN MẶT"):
-            st.toast("🎉 Đã ghi nhận hóa đơn 35.000đ thành công!", icon="💰")
-            
-        st.markdown("""
-        <div class="footer-note">
-            * Sau khi nhấn bán nhanh bằng tiền mặt, hệ thống tự động ghi nhận món lên hóa đơn và in kết toán hóa đơn.
-        </div>
-        """, unsafe_allow_html=True)
+        if st.button("XÁC NHẬN BÁN NHANH", key="btn_quick_sell"):
+            st.toast(f"🎉 Ghi nhận hóa đơn quầy 35.000đ thành công bằng hình thức **{payment_choice}**!", icon="💰")
+        st.markdown('<div style="font-size: 0.8rem; color: #A59E92 !important; font-style: italic; margin-top: 15px;">* Hệ thống tự động ghi nhận món và xuất kết toán hóa đơn ra máy in quầy.</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
