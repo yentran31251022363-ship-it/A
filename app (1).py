@@ -246,100 +246,120 @@ elif page == "Hệ Thống Nhận Diện":
         with col_left:
             st.image(img_aligned, use_container_width=True, caption="Khay cơm chuẩn hóa đưa vào AI core")
 
+        # ------------------------------------------
+        # XỬ LÝ NHẬN DIỆN & TÍNH TOÁN HÓA ĐƠN THỰC TẾ
+        # ------------------------------------------
         h, w, _ = img_aligned.shape
         regions = {
-            "Món chính": img_aligned[int(h*0.66):int(h*0.98), int(w*0.56):int(w*0.98)],
-            "Món rau xào": img_aligned[int(h*0.02):int(h*0.32), int(w*0.56):int(w*0.98)],
-            "Canh": img_aligned[int(h*0.46):int(h*0.98), int(w*0.02):int(w*0.54)],
             "Cơm trắng": img_aligned[int(h*0.02):int(h*0.44), int(w*0.02):int(w*0.54)],
+            "Canh": img_aligned[int(h*0.46):int(h*0.98), int(w*0.02):int(w*0.54)],
+            "Món rau xào": img_aligned[int(h*0.02):int(h*0.32), int(w*0.56):int(w*0.98)],
+            "Món chính": img_aligned[int(h*0.66):int(h*0.98), int(w*0.56):int(w*0.98)],
             "Nước chấm": img_aligned[int(h*0.34):int(h*0.64), int(w*0.56):int(w*0.98)]
         }
 
-        total_bill = 0
-        html_items = ""
-        item_counter = 1
+        with col_right:
+            st.markdown("<div class='canteen-invoice-card'>", unsafe_allow_html=True)
+            st.markdown("""
+            <div class='invoice-header'>
+                <div>
+                    <h3 class='invoice-title'>🧾 KẾT QUẢ TÍNH TIỀN</h3>
+                    <div class='invoice-subtitle'>AI kết xuất hóa đơn tự động</div>
+                </div>
+                <div class='model-badge'>EfficientNet Core V2</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-        for region_name, region_img in regions.items():
-            if region_img.shape[0] == 0 or region_img.shape[1] == 0:
-                continue
+            total_bill = 0
+            idx = 1
 
-            img_resized = cv2.resize(region_img, (224, 224))
-            img_batch = np.expand_dims(img_resized, axis=0).astype('float32')
-            img_batch = preprocess_input(img_batch)
+            # Vòng lặp quét qua các vùng ảnh để nhận diện món và tính tiền
+            for region_name, region_img in regions.items():
+                if region_img.shape[0] == 0 or region_img.shape[1] == 0:
+                    continue
+                
+                # Chuyển đổi định dạng đưa vào Model dự đoán
+                img_resized = cv2.resize(region_img, (224, 224))
+                img_batch = np.expand_dims(img_resized, axis=0).astype('float32')
+                img_batch = preprocess_input(img_batch)
+                
+                predictions = model.predict(img_batch, verbose=0)
+                predicted_class_idx = np.argmax(predictions[0])
+                confidence = np.max(predictions[0]) * 100
+                
+                food_name = CLASS_NAMES[predicted_class_idx]
+                price = PRICE_MAP.get(food_name, 0)
+                
+                # Bỏ qua khay trống không tính tiền
+                if food_name == "Khay inox (Trống)":
+                    continue
+                    
+                total_bill += price
+                badge_text, bg_color, text_color = get_food_badge(food_name)
 
-            predictions = model.predict(img_batch, verbose=0)
-            predicted_class_idx = np.argmax(predictions[0])
-            confidence = np.max(predictions[0]) * 100
+                # Convert ảnh vùng cắt sang base64 để hiển thị lên dòng hóa đơn
+                _, buffer = cv2.imencode('.jpg', cv2.cvtColor(region_img, cv2.COLOR_RGB2BGR))
+                img_base64 = base64.b64encode(buffer).decode()
 
-            food_name = CLASS_NAMES[predicted_class_idx]
-            price = PRICE_MAP[food_name]
-
-            if food_name == "Khay inox (Trống)" or region_name == "Nước chấm":
-                continue
-
-            total_bill += price
-            badge_text, bg_color, text_color = get_food_badge(food_name)
-
-            pil_region = Image.fromarray(region_img)
-            buffered = BytesIO()
-            pil_region.save(buffered, format="JPEG")
-            img_str = base64.b64encode(buffered.getvalue()).decode()
-
-            html_items += f"""
-            <div class='food-item-row'>
-                <div class='food-item-left'>
-                    <div class='food-item-img-container'>
-                        <img src='data:image/jpeg;base64,{img_str}' class='food-item-img' />
-                        <div class='food-number-tag'>#{item_counter}</div>
-                    </div>
-                    <div class='food-details'>
-                        <div class='food-title'>{food_name}</div>
-                        <div class='badge-container'>
-                            <span class='category-badge' style='background-color: {bg_color}; color: {text_color} !important;'>{badge_text}</span>
-                            <span class='accuracy-badge'>Acc: {confidence:.0f}%</span>
+                st.markdown(f"""
+                <div class='food-item-row'>
+                    <div class='food-item-left'>
+                        <div class='food-item-img-container'>
+                            <img class='food-item-img' src='data:image/jpeg;base64,{img_base64}'>
+                            <div class='food-number-tag'>#{idx}</div>
+                        </div>
+                        <div class='food-details'>
+                            <div class='food-title'>{food_name}</div>
+                            <div class='badge-container'>
+                                <span class='category-badge' style='background-color: {bg_color}; color: {text_color} !important;'>{badge_text}</span>
+                                <span class='accuracy-badge'>Độ tin cậy: {confidence:.0f}%</span>
+                            </div>
                         </div>
                     </div>
+                    <div class='food-price'>{price:,}đ</div>
                 </div>
-                <div class='food-price'>{price:,}đ</div>
-            </div>
-            """
-            item_counter += 1
+                """, unsafe_allow_html=True)
+                idx += 1
 
-        with col_right:
-            st.markdown("<div class='step-banner'>&nbsp;🧾 BƯỚC 3: HÓA ĐƠN ĐIỆN TỬ &amp; THANH TOÁN</div>", unsafe_allow_html=True)
-            
-            # Khởi tạo khung hóa đơn phía trên
-            invoice_top_html = f"""
-            <div class='canteen-invoice-card'>
-                <div class='invoice-header'>
-                    <div>
-                        <h3 class='invoice-title'>Hóa Đơn Tổng Canteen</h3>
-                        <div class='invoice-subtitle'>Vé ăn chiết khấu học đường trường đại học</div>
-                    </div>
-                    <div style='text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;'>
-                        <span class='receipt-btn'>📄 BIÊN LAI</span>
-                        <span class='model-badge'>MODEL: SIMULATION CNN (EFFICIENTNET)</span>
-                    </div>
-                </div>
-                {html_items}
-                <div class='total-box'>
-                    <span class='total-label'>TỔNG CỘNG:</span>
-                    <span class='total-price-value'>{total_bill:,}đ</span>
-                </div>
+            # ------------------------------------------
+            # PHẦN TÍNH TỔNG BILL (ĐÃ THAY THẾ Ô ĐEN)
+            # ------------------------------------------
+            st.markdown(f"""
+            <div class='total-box' style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'>
+                <span class='total-label' style='font-size: 1.1rem; font-weight: bold; color: #5D5446 !important;'>TỔNG CỘNG:</span>
+                <span class='total-price-value' style='font-size: 2.3rem; font-weight: 800; color: #435241 !important;'>{total_bill:,}đ</span>
             </div>
-            """
-            st.markdown(invoice_top_html, unsafe_allow_html=True)
-            
-            # --- PHẦN THAY ĐỔI & THÊM MỚI PHƯƠNG THỨC THANH TOÁN ---
-            st.markdown("<h4 style='margin-top:20px; color:#264653;'>💳 PHƯƠNG THỨC THANH TOÁN</h4>", unsafe_allow_html=True)
-            
-            # Dùng widget chính thức của Streamlit thay vì HTML tĩnh để có thể bắt sự kiện click chọn
-            payment_method = st.radio(
+            """, unsafe_allow_html=True)
+
+            # ------------------------------------------
+            # KHU VỰC PHƯƠNG THỨC THANH TOÁN (Ô VUÔNG XINH ĐẸP)
+            # ------------------------------------------
+            st.markdown("### 💳 PHƯƠNG THỨC THANH TOÁN")
+            st.write("Chọn hình thức thanh toán phù hợp:")
+
+            # Sử dụng st.radio tùy biến giao diện dạng hộp lựa chọn
+            pay_option = st.radio(
                 "Chọn hình thức thanh toán phù hợp:",
-                ("Tiền mặt", "Chuyển khoản (Quét mã QR)", "Thẻ SV RFID"),
-                horizontal=True
+                options=["💵 Tiền mặt", "📱 Chuyển khoản (Quét mã QR)", "🪪 Thẻ SV RFID"],
+                horizontal=True,
+                label_visibility="collapsed"
             )
-            
+
+            st.write("")
+
+            # Khối chỉ dẫn tương ứng với ô được chọn giúp nhân viên dễ thao tác
+            if pay_option == "💵 Tiền mặt":
+                st.success("💰 **Hệ thống sẵn sàng:** Vui lòng nhận tiền mặt từ khách hàng và ấn xác nhận kết toán.")
+            elif pay_option == "📱 Chuyển khoản (Quét mã QR)":
+                st.info("📲 **Quét mã nhanh:** Hệ thống đang hiển thị QR động theo số tiền tổng bill trên màn hình phụ.")
+            elif pay_option == "🪪 Thẻ SV RFID":
+                st.warning("💳 **Chờ quẹt thẻ:** Vui lòng áp thẻ sinh viên vào thiết bị đọc thẻ RFID để thanh toán.")
+
+            st.write("")
+            if st.button("XÁC NHẬN HOÀN TẤT HÓA ĐƠN", use_container_width=True):
+                st.toast(f"🎉 Thanh toán thành công {total_bill:,}đ qua phương thức **{pay_option}**!", icon="✅")
+                
+            st.markdown("</div>", unsafe_allow_html=True)
             # Gắn mã QR động bằng API VietQR nếu chọn Chuyển khoản
             if payment_method == "Chuyển khoản (Quét mã QR)":
                 if total_bill > 0:
