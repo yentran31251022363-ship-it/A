@@ -144,6 +144,9 @@ if page == "Trang Chủ (Giới thiệu)":
 # ------------------------------------------
 # TRANG 2: HỆ THỐNG XỬ LÝ CHÍNH
 # ------------------------------------------
+# ------------------------------------------
+# TRANG 2: HỆ THỐNG XỬ LÝ CHÍNH (ĐÃ CẬP NHẬT)
+# ------------------------------------------
 elif page == "Hệ Thống Nhận Diện":
     app_bg = """
     <style>
@@ -199,14 +202,6 @@ elif page == "Hệ Thống Nhận Diện":
     .total-label { font-size: 1.1rem; font-weight: bold; color: #5D5446 !important; letter-spacing: 0.5px; }
     .total-price-value { font-size: 2.3rem; font-weight: 800; color: #435241 !important; }
     
-    .payment-title { font-size: 0.85rem; font-weight: 700; color: #7D705C !important; text-align: center; margin-bottom: 15px; letter-spacing: 0.5px; }
-    
-    /* Giao diện nút bấm lựa chọn phương thức thanh toán kiểu mới */
-    .payment-options-grid { display: flex; gap: 12px; margin-bottom: 20px; }
-    .payment-choice-box { flex: 1; text-align: center; padding: 12px 6px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; border: 1px solid #D0C4A7; background-color: #FFFFFF; color: #6E7B8B !important; }
-    .pay-selected { background-color: #E6ECE6; border: 2px solid #586F56; color: #2F3E2E !important; }
-    
-    .terminal-console { background-color: #222222; border-radius: 12px; padding: 15px; font-family: monospace; color: #AAAAAA !important; font-size: 0.85rem; max-height: 120px; overflow-y: auto; }
     label, p, span, h1, h2, h3, h4, div { color: #000000 !important; }
     </style>
     """
@@ -262,7 +257,6 @@ elif page == "Hệ Thống Nhận Diện":
 
         total_bill = 0
         html_items = ""
-        ai_console_logs = []
         item_counter = 1
 
         for region_name, region_img in regions.items():
@@ -281,15 +275,11 @@ elif page == "Hệ Thống Nhận Diện":
             price = PRICE_MAP[food_name]
 
             if food_name == "Khay inox (Trống)" or region_name == "Nước chấm":
-                if food_name != "Khay inox (Trống)":
-                    ai_console_logs.append(f"⚡ [Detector]: Bỏ qua khu vực phụ '{region_name}' ({food_name}).")
                 continue
 
             total_bill += price
             badge_text, bg_color, text_color = get_food_badge(food_name)
 
-            import base64
-            from io import BytesIO
             pil_region = Image.fromarray(region_img)
             buffered = BytesIO()
             pil_region.save(buffered, format="JPEG")
@@ -313,13 +303,13 @@ elif page == "Hệ Thống Nhận Diện":
                 <div class='food-price'>{price:,}đ</div>
             </div>
             """
-            ai_console_logs.append(f"✔ [CNN Core]: Nhận diện thành công '{food_name}' tại {region_name} - Acc: {confidence:.2f}%")
             item_counter += 1
 
         with col_right:
-            # Tạo khối giao diện 3 phương thức thanh toán mới
-            invoice_html = f"""
-            <div class='step-banner'>&nbsp;🧾 BƯỚC 3: HÓA ĐƠN ĐIỆN TỬ &amp; THANH TOÁN</div>
+            st.markdown("<div class='step-banner'>&nbsp;🧾 BƯỚC 3: HÓA ĐƠN ĐIỆN TỬ &amp; THANH TOÁN</div>", unsafe_allow_html=True)
+            
+            # Khởi tạo khung hóa đơn phía trên
+            invoice_top_html = f"""
             <div class='canteen-invoice-card'>
                 <div class='invoice-header'>
                     <div>
@@ -336,24 +326,51 @@ elif page == "Hệ Thống Nhận Diện":
                     <span class='total-label'>TỔNG CỘNG:</span>
                     <span class='total-price-value'>{total_bill:,}đ</span>
                 </div>
-                <div class='payment-title'>HÌNH THỨC CHIẾT KHẤU THẺ / SMART-QR</div>
-                <div class='payment-options-grid'>
-                    <div class='payment-choice-box pay-selected'>Thẻ SV RFID</div>
-                    <div class='payment-choice-box'>Tiền mặt</div>
-                    <div class='payment-choice-box'>Quét mã</div>
-                </div>
             </div>
             """
-            st.markdown(invoice_html, unsafe_allow_html=True)
+            st.markdown(invoice_top_html, unsafe_allow_html=True)
+            
+            # --- PHẦN THAY ĐỔI & THÊM MỚI PHƯƠNG THỨC THANH TOÁN ---
+            st.markdown("<h4 style='margin-top:20px; color:#264653;'>💳 PHƯƠNG THỨC THANH TOÁN</h4>", unsafe_allow_html=True)
+            
+            # Dùng widget chính thức của Streamlit thay vì HTML tĩnh để có thể bắt sự kiện click chọn
+            payment_method = st.radio(
+                "Chọn hình thức thanh toán phù hợp:",
+                ("Tiền mặt", "Chuyển khoản (Quét mã QR)", "Thẻ SV RFID"),
+                horizontal=True
+            )
+            
+            # Gắn mã QR động bằng API VietQR nếu chọn Chuyển khoản
+            if payment_method == "Chuyển khoản (Quét mã QR)":
+                if total_bill > 0:
+                    st.info("💡 Hệ thống đã tự động tạo mã QR chính xác với tổng số tiền hóa đơn.")
+                    # Sử dụng API VietQR miễn phí (Thay đổi tham số ngân hàng & số tài khoản theo ý muốn của bạn)
+                    # Định dạng: https://img.vietqr.io/image/<BANK_ID>-<ACCOUNT_NO>-qr_only.jpg?amount=<AMOUNT>&addInfo=<MEMO>
+                    bank_id = "MB"          # Tên viết tắt ngân hàng (ví dụ: MB, Vietcombank, Techcombank...)
+                    account_no = "123456789" # Số tài khoản của bạn hoặc của căn tin
+                    memo = f"Thanh toan khay com {total_bill}d"
+                    
+                    qr_url = f"https://img.vietqr.io/image/{bank_id}-{account_no}-qr_only.jpg?amount={total_bill}&addInfo={memo}"
+                    
+                    # Hiển thị mã QR căn giữa
+                    col_qr_l, col_qr_c, col_qr_r = st.columns([1, 2, 1])
+                    with col_qr_c:
+                        st.image(qr_url, caption=f"Vui lòng quét mã QR để chuyển khoản {total_bill:,}đ", use_container_width=True)
+                else:
+                    st.warning("Khay cơm trống hoặc chưa nhận diện được món ăn để tạo mã QR.")
+            
+            elif payment_method == "Tiền mặt":
+                st.success("💰 Vui lòng thanh toán trực tiếp tại quầy thu ngân.")
+                
+            elif payment_method == "Thẻ SV RFID":
+                st.info("🎴 Vui lòng áp thẻ sinh viên vào thiết bị đọc thẻ RFID để thanh toán.")
 
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🛒 XÁC NHẬN & THANH TOÁN NGAY", use_container_width=True, type="primary"):
-                st.toast("🎉 Giao dịch thành công!")
+            if st.button("🛒 XÁC NHẬN & HOÀN TẤT GIAO DỊCH", use_container_width=True, type="primary"):
+                st.toast("🎉 Giao dịch đã được ghi nhận thành công!")
                 st.balloons()
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            console_content = "".join([f"<div style='margin-bottom: 4px; color: #8BE9FD;'>{log}</div>" for log in ai_console_logs])
-            st.markdown(f"<div class='terminal-console'>{console_content}</div>", unsafe_allow_html=True)
+            
+            # --- ĐÃ XÓA PHẦN Ô ĐEN (TERMINAL LOGS KHÔNG CẦN THIẾT) ---
 
 # ------------------------------------------
 # TRANG 3: GÓC ẨM THỰC AI
