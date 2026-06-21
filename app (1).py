@@ -110,6 +110,28 @@ div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
 }
 </style>
 """
+# Thêm đoạn này vào bên trong thẻ <style> ... </style> của custom_ui_style
+custom_ui_style = """
+<style>
+/* ... (các style cũ giữ nguyên) ... */
+
+/* ĐỒNG BỘ PHÔNG CHỮ TỔNG CỘNG GIỐNG VỚI KẾT QUẢ */
+.total-label {
+    font-size: 1.5rem !important; /* Kích thước tương đương với thẻ h2 của Streamlit */
+    font-weight: 700 !important;   /* Làm chữ đậm lên */
+    color: #000000 !important;    /* Ép chữ màu đen */
+    margin: 0 !important;
+    line-height: 1.2 !important;
+}
+
+/* Ép luôn màu đen và độ đậm cho kết quả số tiền (thẻ h2 bên trong Streamlit) */
+div[data-testid="stMarkdownContainer"] h2 {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    margin-top: 0px !important;
+}
+</style>
+"""
 st.markdown(custom_ui_style, unsafe_allow_html=True)
 st.markdown(custom_ui_style, unsafe_allow_html=True)
 
