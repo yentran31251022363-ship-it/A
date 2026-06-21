@@ -164,7 +164,7 @@ def get_base64_encoded_image(image_path):
     return None
 
 # Khởi tạo Menu Ngang dạng Tabs phía trên cùng thay cho Sidebar cũ
-tabs = st.tabs(["🏠 Trang Chủ (Giới thiệu)", "📷 Hệ Thống Nhận Diện", "📊 Thống "])
+tabs = st.tabs(["🏠 Trang Chủ (Giới thiệu)", "📷 Hệ Thống Nhận Diện", "📊 Thống kê"])
 
 # Bảng giá và Danh mục món ăn
 PRICE_MAP = {
