@@ -403,7 +403,7 @@ with tabs[2]:
     col_bottom_left, col_bottom_right = st.columns([1.4, 1.4])
     with col_bottom_left:
         st.markdown('<div class="dashboard-card"><div class="card-title">Xu hướng đĩa ăn bán chạy</div><div style="font-size:0.85rem; color:#555555 !important; margin-bottom:15px;">Báo cáo top món ăn sinh viên yêu thích nhất</div>', unsafe_allow_html=True)
-        top_foods = [{"rank": "#1", "name": "Sườn xào chua ngọt", "rev": "75.000đ", "count": "3 lượt"}, {"rank": "#2", "name": "Rau muống xào tỏi", "rev": "15.000đ", "count": "3 lượt"}, {"rank": "#3", "name": "Canh bắp cải", "rev": "15.000đ", "count": "3 lượt"}]
+        top_foods = [{"rank": "#1", "name": "Sườn xào chua ngọt", "rev": "75.000đ", "count": "3 lượt"}, {"rank": "#2", "name": "Rau muống xào tỏi", "rev": "15.000đ", "count": "3 lượt"}, {"rank": "#3", "name": "Canh bắp cabbage", "rev": "15.000đ", "count": "3 lượt"}]
         for food in top_foods:
             st.markdown(f'<div class="food-rank-row"><div style="display: flex; align-items: center;"><div class="rank-number">{food["rank"]}</div><div><div class="food-info-name" style="color:#000000 !important;">{food["name"]}</div><div class="food-info-revenue" style="color:#333333 !important;">Tích lũy: {food["rev"]}</div></div></div><div class="select-count-tag">{food["count"]}</div></div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -423,4 +423,3 @@ with tabs[2]:
             st.toast(f"🎉 Ghi nhận hóa đơn quầy 35.000đ thành công bằng hình thức **{payment_choice}**!", icon="💰")
         st.markdown('<div style="font-size: 0.8rem; color: #555555 !important; font-style: italic; margin-top: 15px;">* Hệ thống tự động ghi nhận món và xuất kết toán hóa đơn ra máy in quầy.</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
-}
