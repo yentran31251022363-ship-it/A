@@ -164,7 +164,7 @@ def get_base64_encoded_image(image_path):
     return None
 
 # Khởi tạo Menu Ngang dạng Tabs phía trên cùng thay cho Sidebar cũ
-tabs = st.tabs(["🏠 Trang Chủ (Giới thiệu)", "📷 Hệ Thống Nhận Diện", "📊 Góc Ẩm Thực AI"])
+tabs = st.tabs(["🏠 Trang Chủ (Giới thiệu)", "📷 Hệ Thống Nhận Diện", "📊 Thống "])
 
 # Bảng giá và Danh mục món ăn
 PRICE_MAP = {
@@ -301,9 +301,9 @@ with tabs[1]:
         camera_file = st.camera_input("Chụp ảnh khay ăn trực tiếp")
         uploaded_file = st.file_uploader("Hoặc tải ảnh lên từ thiết bị", type=["jpg", "jpeg", "png"])
 
-        st.markdown("<p style='color: #000000; font-weight: 600; margin-bottom: 2px; font-family: \"Inter\", \"Arial\", sans-serif;'>Góc xoay hiệu chỉnh tối ưu từ AI Co-pilot:</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #000000; font-weight: 600; margin-bottom: 2px; font-family: \"Inter\", \"Arial\", sans-serif;'>Góc xoay hiệu chỉnh tối ưu </p>", unsafe_allow_html=True)
         rotation_mode = st.radio(
-            "Góc xoay hiệu chỉnh tối ưu từ AI Co-pilot:",
+            "Góc xoay hiệu chỉnh tối ưu ",
             ("Tự động chỉnh hướng", "Giữ nguyên (0°)", "Xoay 90° CW", "Xoay 90° CCW", "Xoay 180°"),
             key="tray_rotation",
             label_visibility="collapsed"
@@ -322,7 +322,7 @@ with tabs[1]:
         else: img_aligned = img_array
 
         with col_left:
-            st.image(img_aligned, use_container_width=True, caption="Khay cơm chuẩn hóa đưa vào AI core")
+            st.image(img_aligned, use_container_width=True, caption="Khay cơm chuẩn hóa ")
 
         h, w, _ = img_aligned.shape
         regions = {
@@ -334,7 +334,7 @@ with tabs[1]:
         }
 
         with col_right, st.container(key="invoice_card"):
-            st.markdown("<div class='invoice-header'><div><h3 class='invoice-title'>🧾 KẾT QUẢ TÍNH TIỀN</h3><div class='invoice-subtitle'>AI kết xuất hóa đơn tự động</div></div></div>", unsafe_allow_html=True)
+            st.markdown("<div class='invoice-header'><div><h3 class='invoice-title'>🧾 KẾT QUẢ TÍNH TIỀN</h3><div class='invoice-subtitle'></div></div></div>", unsafe_allow_html=True)
 
             total_bill = 0
             idx = 1
