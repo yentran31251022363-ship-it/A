@@ -47,22 +47,54 @@ body, .stApp, p, span, h1, h2, h3, h4, h5, h6, label, div {
     display: none !important;
 }
 
-/* Khối Tab ngang phía trên rộng rãi */
+/* =================================================================
+   THAY ĐỔI RIÊNG CHO PHẦN TABS MENU NGANG (GIỐNG ẢNH THIẾT KẾ)
+   ================================================================= */
 div[data-testid="stTabs"] {
     margin-top: -30px;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    background-color: #FAF7F0 !important;
+    border-bottom: 1px solid #EAE5D8 !important; /* Đường kẻ nền mảnh */
+    padding-bottom: 0px;
 }
+
+/* Định dạng từng nút bấm Tab */
 div[data-testid="stTabs"] button {
-    font-size: 1.1rem !important;
+    font-size: 1.15rem !important;
     font-weight: 600 !important;
-    padding: 12px 24px !important;
+    padding: 14px 30px !important;
+    background-color: transparent !important;
+    border: none !important;
+    transition: all 0.2s ease-in-out !important;
 }
-/* CHỮ TRÊN CÁC TAB MÀU ĐEN */
+
+/* Định dạng chữ mặc định bên trong Tab */
 div[data-testid="stTabs"] button p {
+    color: #4A4A4A !important;
+}
+
+/* Khi di chuột qua Tab */
+div[data-testid="stTabs"] button:hover p {
     color: #000000 !important;
 }
 
-/* CẤU HÌNH CÁC Ô LỰA CHỌN THANH TOÁN (BIẾN ST.RADIO THÀNH Ô VUÔNG NỔI BẬT) */
+/* KHI TAB ĐƯỢC CHỌN (ACTIVE) - Tạo thanh gạch chân màu cam đỏ giống trong ảnh */
+div[data-testid="stTabs"] button[aria-selected="true"] {
+    border-bottom: 3px solid #FF4B4B !important; /* Thanh gạch chân màu cam đỏ nổi bật */
+}
+div[data-testid="stTabs"] button[aria-selected="true"] p {
+    color: #000000 !important;
+    font-weight: 700 !important;
+}
+
+/* Khử thanh gạch ngang mặc định mờ của Streamlit */
+div[data-testid="stTabs"] [data-testid="stTableTabLine"] {
+    display: none !important;
+}
+
+# =================================================================
+# CÁC CSS PHẦN THANH TOÁN VÀ DASHBOARD GIỮ NGUYÊN
+# =================================================================
 div[data-testid="stRadio"] > div {
     display: flex !important;
     flex-direction: row !important;
@@ -71,7 +103,7 @@ div[data-testid="stRadio"] > div {
 }
 div[data-testid="stRadio"] label {
     background-color: #FFFFFF !important;
-    border: 2px solid #D6C7A1 !important; /* Viền nổi bật hơn */
+    border: 2px solid #D6C7A1 !important;
     border-radius: 14px !important;
     padding: 15px 25px !important;
     width: 100% !important;
@@ -80,41 +112,31 @@ div[data-testid="stRadio"] label {
     transition: all 0.2s ease-in-out !important;
     box-shadow: 0 4px 10px rgba(0,0,0,0.04) !important;
 }
-
-/* Hiệu ứng khi hover vào ô chọn */
 div[data-testid="stRadio"] label:hover {
     border-color: #C2410C !important;
     background-color: #FFFDF9 !important;
     transform: translateY(-2px);
 }
-
-/* XÓA BUTTON TRÒN TRƯỚC CÁC CHOICE VÀ PHỐI MÀU LÀM NỔI BẬT KHI ĐƯỢC CHỌN */
 div[data-testid="stRadio"] [data-checked="true"] ~ label {
-    border-color: #EA580C !important; /* Viền cam đậm nổi bật */
-    background-color: #FFEDD5 !important; /* Nền cam nhẹ sang xịn mịn */
+    border-color: #EA580C !important;
+    background-color: #FFEDD5 !important;
     box-shadow: 0 6px 15px rgba(234, 88, 12, 0.2) !important;
 }
 div[data-testid="stRadio"] [data-checked="true"] ~ label p {
     font-weight: 700 !important;
-    color: #C2410C !important; /* Chữ màu cam đậm khi active */
+    color: #C2410C !important;
 }
-
-/* Ẩn hoàn toàn dấu chấm tròn radio mặc định */
 div[data-testid="stRadio"] input[type="radio"] {
     display: none !important;
 }
 div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
     margin: 0 !important;
     font-size: 1rem !important;
-    color: #000000 !important; /* Chữ đen */
+    color: #000000 !important;
 }
-
-/* Sửa lỗi mờ chữ trong các thẻ KPI Dashboard và text nội dung */
 .kpi-value, .card-title, .food-info-name, .food-title, .food-price, .invoice-title, .invoice-subtitle {
     color: #000000 !important;
 }
-
-/* ĐỒNG BỘ PHÔNG CHỮ TỔNG CỘNG GIỐNG VỚI KẾT QUẢ - CHỐNG LỖI ĐỊNH DẠNG */
 .total-label {
     font-family: 'Inter', 'Arial', sans-serif !important;
     font-size: 1.5rem !important;
@@ -123,16 +145,6 @@ div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
     margin: 0 !important;
     line-height: 1.2 !important;
 }
-
-/* Ép luôn màu đen và độ đậm cho kết quả số tiền (thẻ h2 bên trong Streamlit) */
-div[data-testid="stMarkdownContainer"] h2 {
-    color: #000000 !important;
-    font-weight: 700 !important;
-    margin-top: 0px !important;
-    font-family: 'Inter', 'Arial', sans-serif !important;
-}
-
-/* Khung quét mã QR tinh tế */
 .qr-container {
     display: flex;
     flex-direction: column;
@@ -152,10 +164,6 @@ div[data-testid="stMarkdownContainer"] h2 {
     color: #3D4A3A !important;
     margin-top: 10px;
 }
-
-/* =================================================================
-   CSS CẤU HÌNH BẢNG MENU GIÁ THỨC ĂN (MỚI THÊM THEO ẢNH)
-   ================================================================= */
 .menu-container {
     background-color: #FDFCF7;
     border: 1px solid #E6DEC9;
@@ -212,7 +220,6 @@ div[data-testid="stMarkdownContainer"] h2 {
 .menu-table tr:last-child td {
     border-bottom: none;
 }
-/* Hiệu ứng mượt mà khi di chuột qua các dòng thực đơn */
 .menu-table tr:hover td {
     background-color: #FFFBF2;
     color: #C2410C !important;
@@ -374,9 +381,7 @@ with tabs[1]:
             label_visibility="collapsed"
         )
 
-        # =================================================================
-        # THÀNH PHẦN MENU GIÁ THỨC ĂN (MỚI ĐƯỢC CHÈN VÀO FILE THEO ẢNH CỦA BẠN)
-        # =================================================================
+        # BẢNG MENU GIÁ THỨC ĂN
         menu_html = """
         <div class="menu-container">
             <div class="menu-header-banner">📋 MENU GIÁ THỨC ĂN</div>
@@ -474,9 +479,7 @@ with tabs[1]:
                 """, unsafe_allow_html=True)
                 idx += 1
 
-            # =================================================================
             # KHỐI TỔNG CỘNG
-            # =================================================================
             st.markdown(
                 f"<div style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'>"
                 f"<span style='font-size: 1.3rem; font-weight: 800; color: #000000 !important; font-family: \"Inter\", \"Arial\", sans-serif;'>TỔNG CỘNG:</span>"
@@ -485,9 +488,7 @@ with tabs[1]:
                 unsafe_allow_html=True
             )
 
-            # =================================================================
             # PHƯƠNG THỨC THANH TOÁN
-            # =================================================================
             st.markdown("<p style='font-weight: 700; font-size: 1.05rem; margin-bottom: 6px; color: #000000 !important; font-family: \"Inter\", \"Arial\", sans-serif;'>💳 PHƯƠNG THỨC THANH TOÁN</p>", unsafe_allow_html=True)
             
             pay_option = st.radio(
@@ -497,7 +498,7 @@ with tabs[1]:
                 label_visibility="collapsed"
             )
 
-            # Xử lý hiển thị mã QR từ file local 'my_qr.png'
+            # Hiển thị mã QR từ file local 'my_qr.png'
             if pay_option == "📱 Quét mã QR" and total_bill > 0:
                 qr_base64 = get_base64_encoded_image("my_qr.png")
                 if qr_base64:
@@ -520,7 +521,6 @@ with tabs[1]:
 # TRANG 3: GÓC ẨM THỰC AI (DASHBOARD)
 # ==========================================
 with tabs[2]:
-    # CSS định dạng riêng cho Dashboard
     dashboard_css = """
     <style>
     .kpi-card { background: #FFFFFF; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(165,145,120,0.05); border: 1px solid #F3EFE6; display: flex; justify-content: space-between; align-items: center; font-family: 'Inter', 'Arial', sans-serif; }
@@ -539,7 +539,7 @@ with tabs[2]:
     """
     st.markdown(dashboard_css, unsafe_allow_html=True)
 
-    # 4 THÈ KPI HÀNG ĐẦU
+    # 4 THẺ KPI HÀNG ĐẦU
     col1, col2, col3, col4 = st.columns(4)
     with col1: st.markdown('<div class="kpi-card"><div><div class="kpi-title">Tổng doanh thu quầy</div><div class="kpi-value">374.500đ</div><div class="kpi-sub">↗ +12.4% so với hôm qua</div></div><div class="kpi-icon">🪙</div></div>', unsafe_allow_html=True)
     with col2: st.markdown('<div class="kpi-card"><div><div class="kpi-title">Tổng số khay bán ra</div><div class="kpi-value">13 khay</div><div style="font-size:0.8rem; color:#555555 !important; margin-top:5px;">Kiểm soát tự động</div></div><div class="kpi-icon" style="background:#FDF5E6;">🥞</div></div>', unsafe_allow_html=True)
@@ -550,8 +550,8 @@ with tabs[2]:
     col_chart_left, col_chart_right = st.columns([1.7, 1.1])
     with col_chart_left:
         st.markdown('<div class="dashboard-card"><div class="card-title">Xu Hướng Doanh Thu 7 Ngày Qua</div><div style="font-size:0.85rem; color:#555555 !important; margin-bottom:15px;">Dữ liệu cập nhật thời gian thực</div>', unsafe_allow_html=True)
-        chart_data = {"Nancy": ["03/06", "04/06", "05/06", "06/06", "07/06", "08/06", "09/06"], "Doanh thu ngày (đ)": [50000, 62000, 72000, 48000, 55000, 82000, 35000]}
-        st.area_chart(data=chart_data, x="Nancy", y="Doanh thu ngày (đ)", color="#5D6B54")
+        chart_data = {"Ngày": ["03/06", "04/06", "05/06", "06/06", "07/06", "08/06", "09/06"], "Doanh thu ngày (đ)": [50000, 62000, 72000, 48000, 55000, 82000, 35000]}
+        st.area_chart(data=chart_data, x="Ngày", y="Doanh thu ngày (đ)", color="#5D6B54")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_chart_right:
@@ -581,7 +581,6 @@ with tabs[2]:
             label_visibility="collapsed"
         )
         
-        # Xử lý QR cho phần bán nhanh tại quầy từ file local
         if payment_choice == "📱 Quét mã QR Kiosk":
             quick_qr_base64 = get_base64_encoded_image("my_qr.png")
             if quick_qr_base64:
