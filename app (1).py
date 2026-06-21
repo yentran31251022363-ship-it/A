@@ -12,6 +12,8 @@ from io import BytesIO
 # ==========================================
 # 1. CẤU HÌNH TRANG CƠ BẢN VÀ MENU NGANG
 # ==========================================
+# 1. CẤU HÌNH TRANG CƠ BẢN VÀ MENU NGANG
+# ==========================================
 st.set_page_config(
     page_title="Hệ Thống Thanh Toán Khay Cơm AI",
     page_icon="🍲",
@@ -19,12 +21,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# THAY ĐỔI GIAO DIỆN: Đổi màu nền toàn trang, chỉnh chữ màu đen, nổi bật ô thanh toán
+# THAY ĐỔI GIAO DIỆN: Ép chữ đen toàn diện cho mọi thành phần
 custom_ui_style = """
 <style>
 /* Đổi màu nền nhẹ dịu mắt cho toàn bộ trang web */
 .stApp {
     background-color: #FAF7F0 !important;
+}
+
+/* ÉP TẤT CẢ CHỮ MẶC ĐỊNH TRÊN TRANG THÀNH MÀU ĐEN */
+.stApp, .stApp p, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp label {
+    color: #000000 !important;
 }
 
 /* Ẩn hoàn toàn thanh bên sidebar */
@@ -45,7 +52,7 @@ div[data-testid="stTabs"] button {
     font-weight: 600 !important;
     padding: 12px 24px !important;
 }
-/* CHỮ TRÊN CÁC TAB (GIỚI THIỆU / NHẬN DIỆN / GÓC ẨM THỰC) MÀU ĐEN */
+/* CHỮ TRÊN CÁC TAB MÀU ĐEN */
 div[data-testid="stTabs"] button p {
     color: #000000 !important;
 }
@@ -71,7 +78,7 @@ div[data-testid="stRadio"] label {
 
 /* Hiệu ứng khi hover vào ô chọn */
 div[data-testid="stRadio"] label:hover {
-    border-color: #C2410C !important; /* Đổi màu viền cam đậm khi di chuột */
+    border-color: #C2410C !important;
     background-color: #FFFDF9 !important;
     transform: translateY(-2px);
 }
@@ -97,14 +104,13 @@ div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
     color: #000000 !important; /* Chữ đen */
 }
 
-/* ÉP TẤT CẢ CÁC ĐOẠN TEXT CHÍNH TRONG HÓA ĐƠN THÀNH MÀU ĐEN */
-.food-title, .food-price, .invoice-title, .invoice-subtitle {
+/* Sửa lỗi mờ chữ trong các thẻ KPI Dashboard và text nội dung */
+.kpi-value, .card-title, .food-info-name, .food-title, .food-price, .invoice-title, .invoice-subtitle {
     color: #000000 !important;
 }
-
-/* 2 NÚT CHỌN PHƯƠNG THỨC THANH TOÁN (TIỀN MẶT / CHUYỂN KHOẢN) DÙNG ĐÚNG st.button NÊN HIỆU ỨNG HOVER/CLICK GIỐNG HỆT NÚT XÁC NHẬN HÓA ĐƠN */
 </style>
 """
+st.markdown(custom_ui_style, unsafe_allow_html=True)
 st.markdown(custom_ui_style, unsafe_allow_html=True)
 
 # Khởi tạo Menu Ngang dạng Tabs phía trên cùng thay cho Sidebar cũ
