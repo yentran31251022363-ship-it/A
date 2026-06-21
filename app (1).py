@@ -54,11 +54,9 @@ div[data-testid="stTabs"] {
     margin-top: -30px;
     margin-bottom: 25px;
     background-color: #FAF7F0 !important;
-    border-bottom: 1px solid #EAE5D8 !important; /* Đường kẻ nền mảnh */
+    border-bottom: 1px solid #EAE5D8 !important;
     padding-bottom: 0px;
 }
-
-/* Định dạng từng nút bấm Tab */
 div[data-testid="stTabs"] button {
     font-size: 1.15rem !important;
     font-weight: 600 !important;
@@ -67,34 +65,24 @@ div[data-testid="stTabs"] button {
     border: none !important;
     transition: all 0.2s ease-in-out !important;
 }
-
-/* Định dạng chữ mặc định bên trong Tab */
 div[data-testid="stTabs"] button p {
     color: #4A4A4A !important;
 }
-
-/* Khi di chuột qua Tab */
 div[data-testid="stTabs"] button:hover p {
     color: #000000 !important;
 }
-
-/* KHI TAB ĐƯỢC CHỌN (ACTIVE) - Tạo thanh gạch chân màu cam đỏ giống trong ảnh */
 div[data-testid="stTabs"] button[aria-selected="true"] {
-    border-bottom: 3px solid #FF4B4B !important; /* Thanh gạch chân màu cam đỏ nổi bật */
+    border-bottom: 3px solid #FF4B4B !important;
 }
 div[data-testid="stTabs"] button[aria-selected="true"] p {
     color: #000000 !important;
     font-weight: 700 !important;
 }
-
-/* Khử thanh gạch ngang mặc định mờ của Streamlit */
 div[data-testid="stTabs"] [data-testid="stTableTabLine"] {
     display: none !important;
 }
 
-# =================================================================
-# CÁC CSS PHẦN THANH TOÁN VÀ DASHBOARD GIỮ NGUYÊN
-# =================================================================
+/* CÁC THÀNH PHẦN KHÁC */
 div[data-testid="stRadio"] > div {
     display: flex !important;
     flex-direction: row !important;
@@ -164,13 +152,15 @@ div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
     color: #3D4A3A !important;
     margin-top: 10px;
 }
+
+/* BẢNG MENU GIÁ THỨC ĂN (Đồng bộ ảnh) */
 .menu-container {
     background-color: #FDFCF7;
     border: 1px solid #E6DEC9;
     border-radius: 20px;
-    padding: 25px;
+    padding: 22px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.02);
-    margin-top: 25px;
+    margin-top: 10px;
 }
 .menu-header-banner {
     display: inline-flex;
@@ -345,7 +335,6 @@ with tabs[1]:
     .invoice-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0C5; padding-bottom: 15px; margin-bottom: 20px; }
     .invoice-title { font-size: 1.6rem; font-weight: 700; color: #000000 !important; margin: 0; }
     .invoice-subtitle { font-size: 0.95rem; color: #333333 !important; }
-    .model-badge { background-color: #E2E8F0; color: #000000 !important; font-family: monospace; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
     .food-item-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px dashed #EAE0C5; }
     .food-item-left { display: flex; align-items: center; gap: 15px; }
     .food-item-img-container { position: relative; width: 70px; height: 70px; }
@@ -366,22 +355,11 @@ with tabs[1]:
     st.markdown("<h2 style='text-align: center; color: #000000 !important; font-family: \"Inter\", \"Arial\", sans-serif;'>HỆ THỐNG KIỂM TRA & THANH TOÁN KHAY CƠM TỰ ĐỘNG</h2>", unsafe_allow_html=True)
     st.write("---")
 
-    col_left, col_right = st.columns([1.1, 1.3], gap="large")
+    # [CẬP NHẬT CHIA 3 CỘT]: Đưa thực đơn sang một phần cột riêng bên trái
+    col_menu, col_left, col_right = st.columns([1.0, 1.1, 1.3], gap="large")
 
-    with col_left:
-        st.markdown("<div class='step-banner'>📸 BƯỚC 1 & 2: THU THẬP & CĂN LỀ KHAY ĂN</div>", unsafe_allow_html=True)
-        camera_file = st.camera_input("Chụp ảnh khay ăn trực tiếp")
-        uploaded_file = st.file_uploader("Hoặc tải ảnh lên từ thiết bị", type=["jpg", "jpeg", "png"])
-
-        st.markdown("<p style='color: #000000; font-weight: 600; margin-bottom: 2px; font-family: \"Inter\", \"Arial\", sans-serif;'>Góc xoay hiệu chỉnh tối ưu </p>", unsafe_allow_html=True)
-        rotation_mode = st.radio(
-            "Góc xoay hiệu chỉnh tối ưu ",
-            ("Tự động chỉnh hướng", "Giữ nguyên (0°)", "Xoay 90° CW", "Xoay 90° CCW", "Xoay 180°"),
-            key="tray_rotation",
-            label_visibility="collapsed"
-        )
-
-        # BẢNG MENU GIÁ THỨC ĂN
+    # --- CỘT 1: CHUYÊN HIỂN THỊ MENU GIÁ THỨC ĂN RIÊNG BIỆT ---
+    with col_menu:
         menu_html = """
         <div class="menu-container">
             <div class="menu-header-banner">📋 MENU GIÁ THỨC ĂN</div>
@@ -409,6 +387,20 @@ with tabs[1]:
         """
         st.markdown(menu_html, unsafe_allow_html=True)
 
+    # --- CỘT 2: KHU VỰC THU THẬP CAMERA VÀ HÌNH ẢNH ---
+    with col_left:
+        st.markdown("<div class='step-banner'>📸 BƯỚC 1 & 2: THU THẬP & CĂN LỀ KHAY ĂN</div>", unsafe_allow_html=True)
+        camera_file = st.camera_input("Chụp ảnh khay ăn trực tiếp")
+        uploaded_file = st.file_uploader("Hoặc tải ảnh lên từ thiết bị", type=["jpg", "jpeg", "png"])
+
+        st.markdown("<p style='color: #000000; font-weight: 600; margin-bottom: 2px; font-family: \"Inter\", \"Arial\", sans-serif;'>Góc xoay hiệu chỉnh tối ưu </p>", unsafe_allow_html=True)
+        rotation_mode = st.radio(
+            "Góc xoay hiệu chỉnh tối ưu ",
+            ("Tự động chỉnh hướng", "Giữ nguyên (0°)", "Xoay 90° CW", "Xoay 90° CCW", "Xoay 180°"),
+            key="tray_rotation",
+            label_visibility="collapsed"
+        )
+
     active_file = camera_file if camera_file is not None else uploaded_file
 
     if active_file is not None:
@@ -433,6 +425,7 @@ with tabs[1]:
             "Nước chấm": img_aligned[int(h*0.34):int(h*0.64), int(w*0.56):int(w*0.98)]
         }
 
+        # --- CỘT 3: KẾT QUẢ HÓA ĐƠN VÀ THANH TOÁN ---
         with col_right, st.container(key="invoice_card"):
             st.markdown("<div class='invoice-header'><div><h3 class='invoice-title'>🧾 KẾT QUẢ TÍNH TIỀN</h3><div class='invoice-subtitle'></div></div></div>", unsafe_allow_html=True)
 
@@ -539,7 +532,7 @@ with tabs[2]:
     """
     st.markdown(dashboard_css, unsafe_allow_html=True)
 
-    # 4 THẺ KPI HÀNG ĐẦU
+    # 4 THÈ KPI HÀNG ĐẦU
     col1, col2, col3, col4 = st.columns(4)
     with col1: st.markdown('<div class="kpi-card"><div><div class="kpi-title">Tổng doanh thu quầy</div><div class="kpi-value">374.500đ</div><div class="kpi-sub">↗ +12.4% so với hôm qua</div></div><div class="kpi-icon">🪙</div></div>', unsafe_allow_html=True)
     with col2: st.markdown('<div class="kpi-card"><div><div class="kpi-title">Tổng số khay bán ra</div><div class="kpi-value">13 khay</div><div style="font-size:0.8rem; color:#555555 !important; margin-top:5px;">Kiểm soát tự động</div></div><div class="kpi-icon" style="background:#FDF5E6;">🥞</div></div>', unsafe_allow_html=True)
