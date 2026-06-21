@@ -152,18 +152,6 @@ div[data-testid="stMarkdownContainer"] h2 {
     color: #3D4A3A !important;
     margin-top: 10px;
 }
-
-/* QR code nhỏ cho Kiosk bán nhanh */
-.qr-quick-container {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    background-color: #FAFAFA;
-    border: 1px dashed #CCCCCC;
-    border-radius: 12px;
-    padding: 12px;
-    margin-top: 10px;
-}
 </style>
 """
 st.markdown(custom_ui_style, unsafe_allow_html=True)
@@ -250,6 +238,16 @@ def get_food_badge(food_name):
 # ==========================================
 with tabs[0]:
     marketing_bg = """
+    <style>
+    .marketing-wrapper {
+        font-family: 'Montserrat', 'Inter', sans-serif;
+        background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.85)), url("https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80");
+        background-size: cover; background-position: center; padding: 60px; border-radius: 24px; margin-top: 10px;
+    }
+    .marketing-wrapper h1, .marketing-wrapper p { color: white !important; text-align: center; }
+    .main-title { font-size: 3.5rem; font-weight: 800; color: #F39C12 !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+    .sub-title { font-size: 1.4rem; margin-bottom: 40px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+    </style>
     <div class="marketing-wrapper">
         <h1 class='main-title'>CANTEEN AI SYSTEM</h1>
         <p class='sub-title'>Giải pháp nhận diện khay cơm và thanh toán tự động bằng công nghệ Computer Vision</p>
@@ -404,7 +402,7 @@ with tabs[1]:
                 label_visibility="collapsed"
             )
 
-            # [CẬP NHẬT CÁCH 2] Hiển thị mã QR từ file local 'my_qr.png'
+            # Xử lý hiển thị mã QR từ file local 'my_qr.png'
             if pay_option == "📱 Quét mã QR" and total_bill > 0:
                 qr_base64 = get_base64_encoded_image("my_qr.png")
                 if qr_base64:
@@ -427,6 +425,23 @@ with tabs[1]:
 # TRANG 3: GÓC ẨM THỰC AI (DASHBOARD)
 # ==========================================
 with tabs[2]:
+    # KHAI BÁO BIẾN TRÁNH LỖI NAMERROR 
+    dashboard_css = """
+    <style>
+    .kpi-card { background: #FFFFFF; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(165,145,120,0.05); border: 1px solid #F3EFE6; display: flex; justify-content: space-between; align-items: center; font-family: 'Inter', 'Arial', sans-serif; }
+    .kpi-title { font-size: 0.75rem; font-weight: 700; color: #555555 !important; text-transform: uppercase; }
+    .kpi-value { font-size: 1.8rem; font-weight: 700; color: #000000 !important; margin-top: 5px; }
+    .kpi-sub { font-size: 0.8rem; color: #10B981 !important; font-weight: 600; margin-top: 5px; }
+    .kpi-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #EFF6F0; }
+    .dashboard-card { background: #FFFFFF; border-radius: 24px; padding: 25px; box-shadow: 0 4px 15px rgba(165,145,120,0.05); border: 1px solid #F3EFE6; height: 100%; font-family: 'Inter', 'Arial', sans-serif; }
+    .card-title { font-size: 1.25rem; font-weight: 700; color: #000000 !important; }
+    .food-rank-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #FDFCF7; border-radius: 16px; margin-bottom: 10px; border: 1px solid #F7F4EC; }
+    .rank-number { background: #5D6B54; color: white !important; font-weight: 700; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
+    .select-count-tag { background: #E6ECE6; color: #000000 !important; font-weight: 600; font-size: 0.85rem; padding: 6px 12px; border-radius: 8px; }
+    .quick-sell-price-box { border: 1px solid #F3EFE6; background: #FAFAFA; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 15px; }
+    .qr-quick-container { display: flex; align-items: center; gap: 15px; background-color: #FAFAFA; border: 1px dashed #CCCCCC; border-radius: 12px; padding: 12px; margin-top: 10px; }
+    </style>
+    """
     st.markdown(dashboard_css, unsafe_allow_html=True)
 
     # 4 THÈ KPI HÀNG ĐẦU
@@ -455,7 +470,7 @@ with tabs[2]:
     col_bottom_left, col_bottom_right = st.columns([1.4, 1.4])
     with col_bottom_left:
         st.markdown('<div class="dashboard-card"><div class="card-title">Xu hướng đĩa ăn bán chạy</div><div style="font-size:0.85rem; color:#555555 !important; margin-bottom:15px;">Báo cáo top món ăn sinh viên yêu thích nhất</div>', unsafe_allow_html=True)
-        top_foods = [{"rank": "#1", "name": "Sườn xào chua ngọt", "rev": "75.000đ", "count": "3 lượt"}, {"rank": "#2", "name": "Rau muống xào tỏi", "rev": "15.000đ", "count": "3 lượt"}, {"rank": "#3", "name": "Canh bắp cabbage", "rev": "15.000đ", "count": "3 lượt"}]
+        top_foods = [{"rank": "#1", "name": "Sườn xào chua ngọt", "rev": "75.000đ", "count": "3 lượt"}, {"rank": "#2", "name": "Rau muống xào tỏi", "rev": "15.000đ", "count": "3 lượt"}, {"rank": "#3", "name": "Canh bắp cải", "rev": "15.000đ", "count": "3 lượt"}]
         for food in top_foods:
             st.markdown(f'<div class="food-rank-row"><div style="display: flex; align-items: center;"><div class="rank-number">{food["rank"]}</div><div><div class="food-info-name" style="color:#000000 !important;">{food["name"]}</div><div class="food-info-revenue" style="color:#333333 !important;">Tích lũy: {food["rev"]}</div></div></div><div class="select-count-tag">{food["count"]}</div></div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -471,7 +486,7 @@ with tabs[2]:
             label_visibility="collapsed"
         )
         
-        # [CẬP NHẬT CÁCH 2] Xử lý QR cho phần bán nhanh tại quầy
+        # Xử lý QR cho phần bán nhanh tại quầy từ file local
         if payment_choice == "📱 Quét mã QR Kiosk":
             quick_qr_base64 = get_base64_encoded_image("my_qr.png")
             if quick_qr_base64:
