@@ -136,7 +136,7 @@ div[data-testid="stMarkdownContainer"] h2 {
 st.markdown(custom_ui_style, unsafe_allow_html=True)
 
 # Khởi tạo Menu Ngang dạng Tabs phía trên cùng thay cho Sidebar cũ
-tabs = st.tabs(["🏠 Trang Chủ (Giới thiệu)", "📷 Hệ Thống Nhận Diện", "📊 Thống kê"])
+tabs = st.tabs(["🏠 Trang Chủ (Giới thiệu)", "📷 Hệ Thống Nhận Diện", "📊 Góc Ẩm Thực AI"])
 
 # Bảng giá và Danh mục món ăn
 PRICE_MAP = {
@@ -256,6 +256,27 @@ with tabs[1]:
     .category-badge { font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
     .accuracy-badge { background-color: #EDF2F7; color: #000000 !important; font-size: 0.75rem; font-weight: 500; padding: 3px 8px; border-radius: 4px; }
     .food-price { font-size: 1.15rem; font-weight: 700; color: #000000 !important; }
+    
+    /* Khung quét mã QR tinh tế */
+    .qr-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #F8FAF5;
+        border: 2px dashed #A3B899;
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 15px;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    .qr-text {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #3D4A3A !important;
+        margin-top: 10px;
+    }
     </style>
     """
     st.markdown(app_bg, unsafe_allow_html=True)
@@ -306,7 +327,7 @@ with tabs[1]:
         }
 
         with col_right, st.container(key="invoice_card"):
-            st.markdown("<div class='invoice-header'><div><h3 class='invoice-title'>🧾 KẾT QUẢ TÍNH TIỀN</h3><div class='invoice-subtitle'></div></div></div>", unsafe_allow_html=True)
+            st.markdown("<div class='invoice-header'><div><h3 class='invoice-title'>🧾 KẾT QUẢ TÍNH TIỀN</h3><div class='invoice-subtitle'>AI kết xuất hóa đơn tự động</div></div></div>", unsafe_allow_html=True)
 
             total_bill = 0
             idx = 1
@@ -352,7 +373,7 @@ with tabs[1]:
                 idx += 1
 
             # =================================================================
-            # KHỐI TỔNG CỘNG (Đã đồng bộ sang phông chữ hệ thống chuẩn an toàn tuyệt đối)
+            # KHỐI TỔNG CỘNG 
             # =================================================================
             st.markdown(
                 f"<div style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'>"
@@ -373,6 +394,19 @@ with tabs[1]:
                 key="payment_checkout",
                 label_visibility="collapsed"
             )
+
+            # Xử lý hiển thị mã QR động khi chọn "Quét mã QR"
+            if pay_option == "📱 Quét mã QR" and total_bill > 0:
+                # Tạo link QR thanh toán (Sử dụng API QuickChart tạo mã QR chứa thông tin thanh toán nội bộ)
+                qr_data = f"Thanh toan don hang Canteen AI: {total_bill} VND"
+                qr_url = f"https://quickchart.io/qr?text={requests.utils.quote(qr_data)}&size=180&centerImageUrl=https://images.unsplash.com/photo-1557200134-90327ee9fafa?w=50"
+                
+                st.markdown(f"""
+                <div class="qr-container">
+                    <img src="{qr_url}" width="160" style="border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);"/>
+                    <div class="qr-text">Vui lòng quét mã để thanh toán {total_bill:,}đ</div>
+                </div>
+                """, unsafe_allow_html=True)
 
             st.write("")
             if st.button("XÁC NHẬN HOÀN TẤT HÓA ĐƠN", key="btn_confirm_invoice"):
@@ -397,6 +431,18 @@ with tabs[2]:
     .rank-number { background: #5D6B54; color: white !important; font-weight: 700; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
     .select-count-tag { background: #E6ECE6; color: #000000 !important; font-weight: 600; font-size: 0.85rem; padding: 6px 12px; border-radius: 8px; }
     .quick-sell-price-box { border: 1px solid #F3EFE6; background: #FAFAFA; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 15px; }
+    
+    /* QR code nhỏ cho Kiosk bán nhanh */
+    .qr-quick-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background-color: #FAFAFA;
+        border: 1px dashed #CCCCCC;
+        border-radius: 12px;
+        padding: 12px;
+        margin-top: 10px;
+    }
     </style>
     """
     st.markdown(dashboard_css, unsafe_allow_html=True)
@@ -438,10 +484,21 @@ with tabs[2]:
         st.markdown("<p style='font-weight: 600; margin-bottom: 5px; color:#000000 !important; font-family: \"Inter\", \"Arial\", sans-serif;'>Hình thức thanh toán tại quầy:</p>", unsafe_allow_html=True)
         payment_choice = st.radio(
             "Chọn hình thức thanh toán nhanh:",
-            options=["💵 Tiền mặt", "💳 Quẹt thẻ (POS / Ngân hàng)"],
+            options=["💵 Tiền mặt", "💳 Quẹt thẻ (POS / Ngân hàng)", "📱 Quét mã QR Kiosk"],
             key="quick_payment_choice",
             label_visibility="collapsed"
         )
+        
+        # Xử lý QR cho phần bán nhanh tại quầy
+        if payment_choice == "📱 Quét mã QR Kiosk":
+            quick_qr_url = "https://quickchart.io/qr?text=Thanh%20toan%20Kiosk%20Canteen%3A%2035000%20VND&size=120"
+            st.markdown(f"""
+            <div class="qr-quick-container">
+                <img src="{quick_qr_url}" width="90" style="border-radius: 6px;"/>
+                <div style="font-size: 0.85rem; font-weight: 600; color: #333333 !important;">Quét nhanh mã QR<br/>để thanh toán 35.000đ</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
         st.write("")
         if st.button("XÁC NHẬN BÁN NHANH", key="btn_quick_sell"):
             st.toast(f"🎉 Ghi nhận hóa đơn quầy 35.000đ thành công bằng hình thức **{payment_choice}**!", icon="💰")
