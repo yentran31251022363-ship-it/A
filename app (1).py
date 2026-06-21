@@ -152,6 +152,71 @@ div[data-testid="stMarkdownContainer"] h2 {
     color: #3D4A3A !important;
     margin-top: 10px;
 }
+
+/* =================================================================
+   CSS CẤU HÌNH BẢNG MENU GIÁ THỨC ĂN (MỚI THÊM THEO ẢNH)
+   ================================================================= */
+.menu-container {
+    background-color: #FDFCF7;
+    border: 1px solid #E6DEC9;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.02);
+    margin-top: 25px;
+}
+.menu-header-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #FFFBF0;
+    border: 1px solid #E6DEC9;
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #4A3E25 !important;
+    margin-bottom: 15px;
+}
+.menu-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #D6C7A1;
+    border-radius: 14px;
+    overflow: hidden;
+    background-color: #FFFFFF;
+}
+.menu-table th {
+    background-color: #F5EFE0;
+    color: #333333 !important;
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 14px 20px;
+    text-align: left;
+    border-bottom: 1px solid #D6C7A1;
+}
+.menu-table th:last-child {
+    text-align: right;
+}
+.menu-table td {
+    padding: 12px 20px;
+    font-size: 1rem;
+    color: #222222 !important;
+    border-bottom: 1px solid #EAE5D8;
+    transition: background-color 0.15s ease;
+}
+.menu-table td:last-child {
+    text-align: right;
+    font-weight: 700;
+}
+.menu-table tr:last-child td {
+    border-bottom: none;
+}
+/* Hiệu ứng mượt mà khi di chuột qua các dòng thực đơn */
+.menu-table tr:hover td {
+    background-color: #FFFBF2;
+    color: #C2410C !important;
+}
 </style>
 """
 st.markdown(custom_ui_style, unsafe_allow_html=True)
@@ -309,6 +374,36 @@ with tabs[1]:
             label_visibility="collapsed"
         )
 
+        # =================================================================
+        # THÀNH PHẦN MENU GIÁ THỨC ĂN (MỚI ĐƯỢC CHÈN VÀO FILE THEO ẢNH CỦA BẠN)
+        # =================================================================
+        menu_html = """
+        <div class="menu-container">
+            <div class="menu-header-banner">📋 MENU GIÁ THỨC ĂN</div>
+            <table class="menu-table">
+                <thead>
+                    <tr>
+                        <th>Món ăn</th>
+                        <th>Giá thành</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Trứng chiên</td><td>25,000 đ</td></tr>
+                    <tr><td>Cơm trắng</td><td>10,000 đ</td></tr>
+                    <tr><td>Đậu hũ sốt cà</td><td>25,000 đ</td></tr>
+                    <tr><td>Cá hú kho</td><td>30,000 đ</td></tr>
+                    <tr><td>Thịt kho trứng</td><td>30,000 đ</td></tr>
+                    <tr><td>Thịt kho</td><td>25,000 đ</td></tr>
+                    <tr><td>Canh chua</td><td>25,000 đ</td></tr>
+                    <tr><td>Sườn nướng</td><td>30,000 đ</td></tr>
+                    <tr><td>Canh rau</td><td>7,000 đ</td></tr>
+                    <tr><td>Rau xào</td><td>10,000 đ</td></tr>
+                </tbody>
+            </table>
+        </div>
+        """
+        st.markdown(menu_html, unsafe_allow_html=True)
+
     active_file = camera_file if camera_file is not None else uploaded_file
 
     if active_file is not None:
@@ -425,7 +520,7 @@ with tabs[1]:
 # TRANG 3: GÓC ẨM THỰC AI (DASHBOARD)
 # ==========================================
 with tabs[2]:
-    # KHAI BÁO BIẾN TRÁNH LỖI NAMERROR 
+    # CSS định dạng riêng cho Dashboard
     dashboard_css = """
     <style>
     .kpi-card { background: #FFFFFF; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(165,145,120,0.05); border: 1px solid #F3EFE6; display: flex; justify-content: space-between; align-items: center; font-family: 'Inter', 'Arial', sans-serif; }
@@ -455,8 +550,8 @@ with tabs[2]:
     col_chart_left, col_chart_right = st.columns([1.7, 1.1])
     with col_chart_left:
         st.markdown('<div class="dashboard-card"><div class="card-title">Xu Hướng Doanh Thu 7 Ngày Qua</div><div style="font-size:0.85rem; color:#555555 !important; margin-bottom:15px;">Dữ liệu cập nhật thời gian thực</div>', unsafe_allow_html=True)
-        chart_data = {"Ngày": ["03/06", "04/06", "05/06", "06/06", "07/06", "08/06", "09/06"], "Doanh thu ngày (đ)": [50000, 62000, 72000, 48000, 55000, 82000, 35000]}
-        st.area_chart(data=chart_data, x="Ngày", y="Doanh thu ngày (đ)", color="#5D6B54")
+        chart_data = {"Nancy": ["03/06", "04/06", "05/06", "06/06", "07/06", "08/06", "09/06"], "Doanh thu ngày (đ)": [50000, 62000, 72000, 48000, 55000, 82000, 35000]}
+        st.area_chart(data=chart_data, x="Nancy", y="Doanh thu ngày (đ)", color="#5D6B54")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_chart_right:
