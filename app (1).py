@@ -354,13 +354,16 @@ with tabs[1]:
 # =================================================================
             # KHỐI TỔNG CỘNG (Đổi toàn bộ chữ và số tiền thành màu đen tuyệt đối)
             # =================================================================
-            st.markdown(
-                f"<div style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'>"
-                f"<span style='font-size: 1.2rem; font-weight: 800; color: #000000 !important; font-family: sans-serif;'>TỔNG CỘNG:</span>"
-                f"<span style='font-size: 2.3rem; font-weight: 900; color: #000000 !important; font-family: sans-serif;'>{total_bill:,}đ</span>"
-                f"</div>", 
-                unsafe_allow_html=True
-            )
+          # =================================================================
+# KHỐI TỔNG CỘNG (Đã sửa phông chữ an toàn, tránh lỗi phông)
+# =================================================================
+st.markdown(
+    f"<div style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'>",
+    f"<span style='font-size: 1.3rem; font-weight: 700; color: #000000 !important; font-family: \"Inter\", \"Arial\", sans-serif;'>TỔNG CỘNG:</span>",
+    f"<span style='font-size: 2.3rem; font-weight: 800; color: #000000 !important; font-family: \"Inter\", \"Arial\", sans-serif;'>{total_bill:,}đ</span>",
+    f"</div>", 
+    unsafe_allow_html=True
+)
 
             # =================================================================
             # PHƯƠNG THỨC THANH TOÁN (Ép chữ đen cho cả tiêu đề)
