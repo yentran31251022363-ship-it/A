@@ -136,7 +136,7 @@ div[data-testid="stMarkdownContainer"] h2 {
 st.markdown(custom_ui_style, unsafe_allow_html=True)
 
 # Khởi tạo Menu Ngang dạng Tabs phía trên cùng thay cho Sidebar cũ
-tabs = st.tabs(["🏠 Trang Chủ (Giới thiệu)", "📷 Hệ Thống Nhận Diện", "📊 Góc Ẩm Thực AI"])
+tabs = st.tabs(["🏠 Trang Chủ (Giới thiệu)", "📷 Hệ Thống Nhận Diện", "📊 Thống kê"])
 
 # Bảng giá và Danh mục món ăn
 PRICE_MAP = {
@@ -306,7 +306,7 @@ with tabs[1]:
         }
 
         with col_right, st.container(key="invoice_card"):
-            st.markdown("<div class='invoice-header'><div><h3 class='invoice-title'>🧾 KẾT QUẢ TÍNH TIỀN</h3><div class='invoice-subtitle'>AI kết xuất hóa đơn tự động</div></div></div>", unsafe_allow_html=True)
+            st.markdown("<div class='invoice-header'><div><h3 class='invoice-title'>🧾 KẾT QUẢ TÍNH TIỀN</h3><div class='invoice-subtitle'></div></div></div>", unsafe_allow_html=True)
 
             total_bill = 0
             idx = 1
