@@ -12,6 +12,8 @@ from io import BytesIO
 # ==========================================
 # 1. CẤU HÌNH TRANG CƠ BẢN VÀ MENU NGANG
 # ==========================================
+# 1. CẤU HÌNH TRANG CƠ BẢN VÀ MENU NGANG
+# ==========================================
 st.set_page_config(
     page_title="Hệ Thống Thanh Toán Khay Cơm AI",
     page_icon="🍲",
@@ -19,7 +21,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# THAY ĐỔI GIAO DIỆN: Đổi màu nền toàn trang, chỉnh chữ màu đen, nổi bật ô thanh toán
+# THAY ĐỔI GIAO DIỆN: Ép chữ đen toàn diện cho mọi thành phần
 custom_ui_style = """
 <style>
 /* Đổi màu nền nhẹ dịu mắt cho toàn bộ trang web */
@@ -27,7 +29,7 @@ custom_ui_style = """
     background-color: #FAF7F0 !important;
 }
 
-/* ÉP TẤT CẢ CHỮ MẶC ĐỊNH TRÊN TRANG THÀNH MÀU ĐEN TUYỆT ĐỐI */
+/* ÉP TẤT CẢ CHỮ MẶC ĐỊNH TRÊN TRANG THÀNH MÀU ĐEN */
 .stApp, .stApp p, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp label {
     color: #000000 !important;
 }
@@ -50,7 +52,7 @@ div[data-testid="stTabs"] button {
     font-weight: 600 !important;
     padding: 12px 24px !important;
 }
-/* CHỮ TRÊN CÁC TAB (GIỚI THIỆU / NHẬN DIỆN / GÓC ẨM THỰC) MÀU ĐEN */
+/* CHỮ TRÊN CÁC TAB MÀU ĐEN */
 div[data-testid="stTabs"] button p {
     color: #000000 !important;
 }
@@ -76,7 +78,7 @@ div[data-testid="stRadio"] label {
 
 /* Hiệu ứng khi hover vào ô chọn */
 div[data-testid="stRadio"] label:hover {
-    border-color: #C2410C !important; /* Đổi màu viền cam đậm khi di chuột */
+    border-color: #C2410C !important;
     background-color: #FFFDF9 !important;
     transform: translateY(-2px);
 }
@@ -102,12 +104,35 @@ div[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
     color: #000000 !important; /* Chữ đen */
 }
 
-/* ÉP TẤT CẢ CÁC ĐOẠN TEXT CHÍNH TRONG HÓA ĐƠN THÀNH MÀU ĐEN */
-.food-title, .food-price, .invoice-title, .invoice-subtitle, .kpi-value, .card-title, .food-info-name {
+/* Sửa lỗi mờ chữ trong các thẻ KPI Dashboard và text nội dung */
+.kpi-value, .card-title, .food-info-name, .food-title, .food-price, .invoice-title, .invoice-subtitle {
     color: #000000 !important;
 }
 </style>
 """
+# Thêm đoạn này vào bên trong thẻ <style> ... </style> của custom_ui_style
+custom_ui_style = """
+<style>
+/* ... (các style cũ giữ nguyên) ... */
+
+/* ĐỒNG BỘ PHÔNG CHỮ TỔNG CỘNG GIỐNG VỚI KẾT QUẢ */
+.total-label {
+    font-size: 1.5rem !important; /* Kích thước tương đương với thẻ h2 của Streamlit */
+    font-weight: 700 !important;   /* Làm chữ đậm lên */
+    color: #000000 !important;    /* Ép chữ màu đen */
+    margin: 0 !important;
+    line-height: 1.2 !important;
+}
+
+/* Ép luôn màu đen và độ đậm cho kết quả số tiền (thẻ h2 bên trong Streamlit) */
+div[data-testid="stMarkdownContainer"] h2 {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    margin-top: 0px !important;
+}
+</style>
+"""
+st.markdown(custom_ui_style, unsafe_allow_html=True)
 st.markdown(custom_ui_style, unsafe_allow_html=True)
 
 # Khởi tạo Menu Ngang dạng Tabs phía trên cùng thay cho Sidebar cũ
@@ -223,7 +248,6 @@ with tabs[1]:
     .invoice-subtitle { font-size: 0.95rem; color: #333333 !important; }
     .model-badge { background-color: #E2E8F0; color: #000000 !important; font-family: monospace; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
     .food-item-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px dashed #EAE0C5; }
-    .food-item-row:last-of-type { border-bottom: none; }
     .food-item-left { display: flex; align-items: center; gap: 15px; }
     .food-item-img-container { position: relative; width: 70px; height: 70px; }
     .food-item-img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
@@ -327,20 +351,19 @@ with tabs[1]:
                 </div>
                 """, unsafe_allow_html=True)
                 idx += 1
-
-            # =================================================================
-            # KHỐI TỔNG CỘNG: Đồng bộ phông chữ, kích thước, độ đậm cho cả 2 bên
+# =================================================================
+            # KHỐI TỔNG CỘNG (Đổi toàn bộ chữ và số tiền thành màu đen tuyệt đối)
             # =================================================================
             st.markdown(
                 f"<div style='background-color: #FFFDF6; border: 1px solid #EAE0C5; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 25px;'>"
-                f"<span style='font-size: 2.3rem; font-weight: 900; color: #000000 !important; font-family: sans-serif; letter-spacing: -0.5px;'>TỔNG CỘNG:</span>"
+                f"<span style='font-size: 1.2rem; font-weight: 800; color: #000000 !important; font-family: sans-serif;'>TỔNG CỘNG:</span>"
                 f"<span style='font-size: 2.3rem; font-weight: 900; color: #000000 !important; font-family: sans-serif;'>{total_bill:,}đ</span>"
                 f"</div>", 
                 unsafe_allow_html=True
             )
 
             # =================================================================
-            # PHƯƠNG THỨC THANH TOÁN
+            # PHƯƠNG THỨC THANH TOÁN (Ép chữ đen cho cả tiêu đề)
             # =================================================================
             st.markdown("<p style='font-weight: 700; font-size: 1.05rem; margin-bottom: 6px; color: #000000 !important; font-family: sans-serif;'>💳 PHƯƠNG THỨC THANH TOÁN</p>", unsafe_allow_html=True)
             
@@ -423,3 +446,5 @@ with tabs[2]:
             st.toast(f"🎉 Ghi nhận hóa đơn quầy 35.000đ thành công bằng hình thức **{payment_choice}**!", icon="💰")
         st.markdown('<div style="font-size: 0.8rem; color: #555555 !important; font-style: italic; margin-top: 15px;">* Hệ thống tự động ghi nhận món và xuất kết toán hóa đơn ra máy in quầy.</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
+
+
